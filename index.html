@@ -808,7 +808,7 @@ function doPDF(){
         1:  {halign:'center', cellWidth: 12}, // MENGE
         2:  {halign:'center', cellWidth: 18}, // BRAND
         3:  {halign:'left',   cellWidth: 22}, // SERIE
-        4:  {halign:'left',   cellWidth: 40}, // ARTIKEL (etwas breiter)
+        4:  {halign:'left',   cellWidth: 39}, // ARTIKEL (etwas breiter)
         5:  {halign:'center', cellWidth: 14, fontStyle:'bold'}, // KODE
         6:  {halign:'center', cellWidth: 18}, // FORMAT (etwas breiter)
         7:  {halign:'center', cellWidth: 12, fontStyle:'bold'}, // LAGER
@@ -816,24 +816,20 @@ function doPDF(){
         9:  {halign:'center', cellWidth: 10}, // ME
         10: {halign:'right',  cellWidth: 19, fontStyle:'bold', textColor:[204,0,0]} // NETTOPREIS (etwas schmaler)
       },
-      didParseCell: function(data){
+   didParseCell: function(data){
         if(data.section === 'body' && data.row.raw){
-          // Hintergrundfarbe aus _bgColor anwenden (Zebra)
-          if(data.row.raw._bgColor && !data.cell.styles.fillColor){
+          // Zebra-Hintergrundfarbe IMMER setzen (außer Sub-Zeilen, die haben schon fillColor)
+          // Sub-Zeilen sind erkennbar daran, dass die Zelle in raw nicht direkt gemappt ist
+          var rawCell = data.row.raw[data.column.index];
+          var isSubRowCell = rawCell && typeof rawCell === 'object' && rawCell.styles && rawCell.styles.fillColor;
+          if(!isSubRowCell && data.row.raw._bgColor){
             data.cell.styles.fillColor = data.row.raw._bgColor;
-          } else if(data.row.raw._bgColor){
-            // Wenn Zelle eigene fillColor hat (von Sub-Zeilen-Definition), respektieren
-            // Sonst überschreiben mit Zebra-Farbe
-            if(JSON.stringify(data.cell.styles.fillColor) === JSON.stringify([255,255,255]) ||
-               !data.cell.styles.fillColor){
-              data.cell.styles.fillColor = data.row.raw._bgColor;
-            }
           }
           // Alt-Positionen: blaue Schrift
           if(data.row.raw._isAlt){
             data.cell.styles.textColor = [21,101,192]; // #1565c0
           }
-          // NETTOPREIS-Spalte: Rot bleibt, auch bei Alt
+          // NETTOPREIS-Spalte: Rot bleibt, außer bei Alt-Positionen
           if(data.column.index === 10 && !data.row.raw._isAlt){
             data.cell.styles.textColor = [204,0,0];
           }
