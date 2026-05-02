@@ -301,7 +301,7 @@ button{cursor:pointer}
   <div id="transport-row-container"></div>
 
  <div class="acts">
-    <button class="bs" id="btn-save" onclick="speichereAngebot()" disabled>Angebot speichern</button>
+   <button class="bp" id="btn-show-pdf" onclick="doPDF()" style="display:none">Als PDF anzeigen</button> <button class="bs" id="btn-save" onclick="speichereAngebot()" disabled>Angebot speichern</button>
     <button class="bp" id="btn-pdf" onclick="doPDF()" disabled>PDF Angebot erstellen</button>
     <button class="br" onclick="resetAll()">Zurücksetzen</button>
   </div>
@@ -318,7 +318,7 @@ var GR_OPT=[0.50,0.55];
 var ZR1_OPT=[0,0.02,0.03,0.05,0.07,0.08,0.10,0.12,0.15,0.18,0.20,0.30,0.50];
 var ZR23_OPT=[0,0.02,0.03,0.05,0.07,0.08,0.10,0.12,0.15,0.18,0.20];
 
-var S={erst:'',ini:'',bv:'',kunde:'',ansprech:'',kat:'',marke:'',ocPdf:'',prom:'',pos:[],showRab:false,showBrutto:false,lnr:'01',showTransport:false,transportKosten:'' ,showPersText:false,persText:'',notiz:'',gespeichert:false,gespeichertId:null,geladenVon:null,letzteSpeicherNr:''};
+var S={erst:'',ini:'',bv:'',kunde:'',ansprech:'',kat:'',marke:'',ocPdf:'',prom:'',pos:[],showRab:false,showBrutto:false,lnr:'01',showTransport:false,transportKosten:'' ,showPersText:false,persText:'',notiz:'',gespeichert:false,gespeichertId:null,geladenVon:null,letzteSpeicherNr:'',geaendert:false};
 
 var SIGS={};
 function getSig(n){return null;}
@@ -589,15 +589,30 @@ function delP(i){S.pos.splice(i,1);renderPos()}
 function focN(el,i){var p=S.pos[i];var isM=p.nm!==''&&!isNaN(parseFloat(p.nm));if(!isM)el.value=p.net.toFixed(2);el.select();S.pos[i].nm=isM?p.nm:p.net.toFixed(2)}
 function blurN(el,i){var p=S.pos[i];if(el.value===''||el.value===fmt(p.net)){S.pos[i].nm='';renderPos();}else{renderPos()}}
 
-function checkOk(){
+function markChanged(){
+  if(S.geladenVon){
+    S.geaendert=true;
+  }
+  checkOk();
+}
+  
+  function checkOk(){
   var ok=S.pos.length>0 &&
     S.pos[0].menge!==''&&S.pos[0].menge!=='ALT'&&parseInt(S.pos[0].menge)>0 &&
     S.pos.every(function(p){return (p.menge!==''&&(p.menge==='ALT'||parseInt(p.menge)>0))}) &&
     S.pos.every(function(p){if(p.menge==='ALT')return true;var nv=getND(p);return nv>0});
   var btnSave=document.getElementById('btn-save');
   var btnPdf=document.getElementById('btn-pdf');
-  if(btnSave) btnSave.disabled = !ok || S.gespeichert;
-  if(btnPdf) btnPdf.disabled = !ok || !S.gespeichert;
+  var btnShowPdf=document.getElementById('btn-show-pdf');
+  if(btnShowPdf){
+    if(S.geladenVon && !S.geaendert){
+      btnShowPdf.style.display='inline-block';
+    } else {
+      btnShowPdf.style.display='none';
+    }
+  }
+  if(btnSave) btnSave.disabled = !ok || (S.gespeichert && !S.geaendert);
+  if(btnPdf)  btnPdf.disabled  = !ok || !S.gespeichert || S.geaendert;  
   var zeroP=S.pos.filter(function(p){return p.menge!=='ALT'&&getND(p)<=0});
   var mb=document.getElementById('msg-box');
   if(zeroP.length>0&&S.pos.length>0){mb.textContent='\u26a0 '+zeroP.length+' Position(en) mit Nettopreis 0,00 \u20ac \u2013 bitte manuell Preis eingeben';mb.style.display='block';}
@@ -1116,6 +1131,9 @@ async function ladeAngebotInsTool(id){
     }
     resetAll();
     S.geladenVon = data;
+    S.gespeichert = true;
+    S.gespeichertId = data.id;
+    S.geaendert = false;
     S.bv = data.bauvorhaben || '';
     document.getElementById('f-bv').value = S.bv;
     var kundeKomplett = [data.kunde_name, data.kunde_strasse, data.kunde_plz_ort]
@@ -1367,6 +1385,7 @@ var parentId = null;
     var res = await speichereInSupabase(nr);
     if(res.ok){
       S.gespeichert = true;
+      S.geaendert = false;
       S.gespeichertId = res.data ? res.data.id : null;
       var savedNr = res.data && res.data.angebots_nr ? res.data.angebots_nr : nr;
       S.letzteSpeicherNr = savedNr;
