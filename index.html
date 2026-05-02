@@ -258,7 +258,7 @@ button{cursor:pointer}
       </div>
    <div class="opt-item" id="pers-text-box" style="display:none;flex:1 1 100%;flex-direction:column;align-items:flex-start;border-top:1px solid #eee;padding-top:12px;margin-top:6px">
         <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#000;margin-bottom:6px">Personalisierter Text im Angebot <span style="color:#bbb;text-transform:none;letter-spacing:0;font-size:10px">(im PDF sichtbar, max. 500 Zeichen)</span> <span id="pers-text-counter" style="color:#bbb;text-transform:none;letter-spacing:0;font-size:10px;margin-left:8px">0 / 500</span></label>
-        <textarea id="f-pers-text" rows="3" placeholder="z.B. Lieferzeit ca. 6-8 Wochen. Sonderpreis gueltig bis 31.12.2026." maxlength="500" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;resize:vertical;min-height:70px;background:#fffef5;box-sizing:border-box" oninput="S.persText=this.value;document.getElementById('pers-text-counter').textContent=this.value.length+' / 500'"></textarea>
+        <textarea id="f-pers-text" rows="3" placeholder="z.B. Lieferzeit ca. 6-8 Wochen. Sonderpreis gueltig bis 31.12.2026." maxlength="500" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;resize:vertical;min-height:90px;background:#fffef5;box-sizing:border-box" oninput="S.persText=this.value;document.getElementById('pers-text-counter').textContent=this.value.length+' / 500'"></textarea>
       </div>
     </div>
   </div>
@@ -873,8 +873,35 @@ function doPDF(useOriginal){
             data.cell.styles.textColor = [204,0,0];
           }
         }
+      },
+      didDrawPage: function(data){
+        var pageNum = doc.internal.getCurrentPageInfo().pageNumber;
+        // Mini-Header auf Seite 2+
+        if(pageNum > 1){
+          doc.setFont('helvetica','bold');
+          doc.setFontSize(10);
+          doc.setTextColor(44,62,90); // Marazzi Navy
+          doc.text('MARAZZI', marginL, 10);
+          doc.setFont('helvetica','normal');
+          doc.setFontSize(8);
+          doc.setTextColor(100,100,100);
+          doc.text('Angebot ' + nr + ' (Fortsetzung)', pageW - marginL, 10, {align:'right'});
+          doc.setTextColor(0,0,0);
+        }
       }
     });
+    // === SEITENZAHL UNTEN AUF JEDER SEITE ===
+    var totalPages = doc.internal.getNumberOfPages();
+    for(var i = 1; i <= totalPages; i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(150,150,150);
+      doc.text('Seite ' + i + ' von ' + totalPages, pageW - marginL, 287, {align:'right'});
+      doc.setTextColor(0,0,0);
+    }
+    // Zur letzten Seite zurueck, damit Schluss-Text dort gerendert wird
+    doc.setPage(totalPages);
     
     // === BLOCK ZWISCHEN TABELLE UND SCHLUSS-TEXT ===
     // Position nach der Tabelle ermitteln
