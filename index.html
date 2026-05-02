@@ -301,8 +301,8 @@ button{cursor:pointer}
   <div id="transport-row-container"></div>
 
  <div class="acts">
-   <button class="bp" id="btn-show-pdf" onclick="doPDF()" style="display:none">Als PDF anzeigen</button> <button class="bs" id="btn-save" onclick="speichereAngebot()" disabled>Angebot speichern</button>
-    <button class="bp" id="btn-pdf" onclick="doPDF()" disabled>PDF Angebot erstellen</button>
+   <button class="bp" id="btn-show-pdf" onclick="doPDF(true)" style="display:none">Als PDF anzeigen</button> <button class="bs" id="btn-save" onclick="speichereAngebot()" disabled>Angebot speichern</button>
+    <button class="bp" id="btn-pdf" onclick="doPDF(false)" disabled>PDF Angebot erstellen</button>
     <button class="br" onclick="resetAll()">Zurücksetzen</button>
   </div>
   <div id="msg-box" class="msg" style="display:none"></div>
@@ -618,11 +618,26 @@ function markChanged(){
   if(zeroP.length>0&&S.pos.length>0){mb.textContent='\u26a0 '+zeroP.length+' Position(en) mit Nettopreis 0,00 \u20ac \u2013 bitte manuell Preis eingeben';mb.style.display='block';}
   else{mb.style.display='none';}
 }
-function doPDF(){
-  var nr=genNr();
-  var d=new Date();
-  var datum=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
-
+function doPDF(useOriginal){
+  var nr, datum;
+  if(useOriginal && S.geladenVon && S.geladenVon.angebots_nr){
+    // Original-Modus: Original-Nummer und Original-Datum verwenden
+    nr = S.geladenVon.angebots_nr;
+    var od = S.geladenVon.angebots_datum;
+    if(od){
+      // Datum von "2026-05-02" zu "02.05.2026" formatieren
+      var parts = od.split('-');
+      datum = parts.length === 3 ? parts[2]+'.'+parts[1]+'.'+parts[0] : od;
+    } else {
+      var d = new Date();
+      datum = String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+    }
+  } else {
+    // Normal-Modus: frisch generieren
+    nr = genNr();
+    var d = new Date();
+    datum = String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+  }
   // Dateiname zusammenbauen
   var pdfParts=[nr];
   if(S.bv)pdfParts.push(S.bv.trim());
