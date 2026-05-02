@@ -674,7 +674,130 @@ function doPDF(){
     doc.text('vielen Dank fuer Ihre Anfrage zum oben genannten Bauvorhaben.', marginL, y);
     y+=lineH;
     doc.text('Gerne unterbreiten wir Ihnen folgendes Angebot:', marginL, y);
+// === TABELLE mit autotable (Etappe 2B) ===
+    var tableY = y + 12; // Abstand zur Anrede
 
+    // Spalten-Header
+    var head = [['POS.','MENGE','BRAND','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
+
+    // Daten-Zeilen aus S.pos zusammenbauen
+    var body = [];
+    var posNum = 0;
+
+    S.pos.forEach(function(p, i){
+      var nv = getND(p);
+      var isAlt = p.menge === 'ALT';
+      posNum = isAlt ? posNum : posNum + 1;
+
+      // Hauptzeile der Position
+      var row = [
+        isAlt ? 'Alt.' : String(posNum),
+        isAlt ? '' : String(p.menge || ''),
+        String(p.brand || ''),
+        String(p.serie || ''),
+        String(p.art || ''),
+        String(p.artnr || ''),
+        String(p.sz || ''),
+        String(p.werk || ''),
+        String(p.fracht || ''),
+        String(p.me || ''),
+        fmt(nv)
+      ];
+
+      // Alt-Positionen markieren mit Farb-Flag
+      if(isAlt){
+        row._isAlt = true;
+      }
+
+      body.push(row);
+
+      // Sub-Zeile "Weitere Farbvarianten..." wenn aktiviert
+      if(p.showAlt){
+        var subRow = [{
+          content: 'Weitere Farbvarianten sind zum gleichen Preis erhaeltlich',
+          colSpan: 11,
+          styles: {
+            fontStyle: 'italic',
+            fontSize: 7,
+            textColor: [102,102,102],
+            fillColor: [255,255,255],
+            halign: 'left',
+            cellPadding: {top:1, right:2, bottom:1, left:8}
+          }
+        }];
+        body.push(subRow);
+      }
+    });
+
+    // Transportkosten-Zeile (wenn aktiviert)
+    if(S.showTransport && S.transportKosten){
+      posNum++;
+      var tkVal = String(S.transportKosten).replace(',','.');
+      var tkNum = parseFloat(tkVal);
+      var tkFmt = isNaN(tkNum) ? (S.transportKosten + ' EUR') : fmt(tkNum);
+
+      body.push([
+        String(posNum),
+        '1',
+        '-',
+        'TRANSPORTKOSTEN',
+        'Lieferung ohne Abladen',
+        '-',
+        '-',
+        '-',
+        'Pausch.',
+        '-',
+        tkFmt
+      ]);
+    }
+
+    // Tabelle rendern
+    doc.autoTable({
+      head: head,
+      body: body,
+      startY: tableY,
+      margin: {left: marginL, right: marginL},
+      theme: 'grid',
+      styles: {
+        font: 'helvetica',
+        fontSize: 7,
+        cellPadding: {top:1.5, right:1.5, bottom:1.5, left:1.5},
+        lineColor: [180,180,180],
+        lineWidth: 0.1,
+        textColor: [0,0,0],
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [44,62,90], // Marazzi-Navy #2c3e5a
+        textColor: [255,255,255],
+        fontStyle: 'bold',
+        fontSize: 7,
+        halign: 'center',
+        valign: 'middle'
+      },
+      bodyStyles: {
+        fillColor: [240,248,240] // Hellgrün #f0f8f0
+      },
+      columnStyles: {
+        0: {halign:'center', cellWidth: 10}, // POS
+        1: {halign:'center', cellWidth: 12}, // MENGE
+        2: {halign:'center', cellWidth: 18}, // BRAND
+        3: {halign:'left',   cellWidth: 22}, // SERIE
+        4: {halign:'left',   cellWidth: 38}, // ARTIKEL
+        5: {halign:'center', cellWidth: 14, fontStyle:'bold'}, // KODE
+        6: {halign:'center', cellWidth: 17}, // FORMAT
+        7: {halign:'center', cellWidth: 12, fontStyle:'bold'}, // LAGER
+        8: {halign:'center', cellWidth: 12, fontStyle:'bold'}, // FRACHT
+        9: {halign:'center', cellWidth: 10}, // ME
+        10:{halign:'right',  cellWidth: 22, fontStyle:'bold', textColor:[204,0,0]} // NETTOPREIS rot fett
+      },
+      didParseCell: function(data){
+        // Alt-Positionen blau einfärben
+        if(data.section === 'body' && data.row.raw && data.row.raw._isAlt){
+          data.cell.styles.textColor = [21,101,192]; // #1565c0
+        }
+      }
+    });
     // === Datei speichern (Direkt-Download) ===
     doc.save(pdfTitle+'.pdf');
     showMsg('\u2705 PDF heruntergeladen (Etappe 2A: nur Header).');
