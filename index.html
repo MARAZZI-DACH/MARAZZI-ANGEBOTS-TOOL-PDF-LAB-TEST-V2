@@ -984,11 +984,32 @@ function doPDF(useOriginal){
       doc.text('Seite ' + i + ' von ' + totalPages, pageW - marginL, 287, {align:'right'});
       doc.setTextColor(0,0,0);
     }
-// === Datei ausgeben: iOS = neuer Tab, PC = Direkt-Download ===
+// === Datei ausgeben: iOS = Share-Sheet mit echtem File, PC = Direkt-Download ===
     if(isIOS){
-      var blobUrl = doc.output('bloburl');
-      window.open(blobUrl, '_blank');
-      showMsg('\u2705 PDF in neuem Tab geoeffnet.');
+      var pdfBlob = doc.output('blob');
+      var pdfFile = new File([pdfBlob], pdfTitle+'.pdf', {type:'application/pdf'});
+      // Web Share API mit Files (modernes iOS)
+      if(navigator.canShare && navigator.canShare({files:[pdfFile]})){
+        navigator.share({
+          files:[pdfFile],
+          title: pdfTitle
+        }).then(function(){
+          showMsg('\u2705 PDF geteilt.');
+        }).catch(function(err){
+          // User hat abgebrochen oder Fehler - kein Problem
+          if(err && err.name !== 'AbortError'){
+            console.error('Share-Fehler:', err);
+            // Fallback auf neuen Tab
+            var blobUrl = doc.output('bloburl');
+            window.open(blobUrl, '_blank');
+          }
+        });
+      } else {
+        // Fallback: alter iOS / Web Share API nicht verfuegbar
+        var blobUrl = doc.output('bloburl');
+        window.open(blobUrl, '_blank');
+        showMsg('\u2705 PDF in neuem Tab geoeffnet.');
+      }
     } else {
       doc.save(pdfTitle+'.pdf');
       showMsg('\u2705 PDF heruntergeladen.');
