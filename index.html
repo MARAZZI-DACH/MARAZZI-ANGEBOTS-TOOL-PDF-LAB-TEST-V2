@@ -990,9 +990,8 @@ function doPDF(useOriginal){
       var pdfFile = new File([pdfBlob], pdfTitle+'.pdf', {type:'application/pdf'});
       // Web Share API mit Files (modernes iOS)
       if(navigator.canShare && navigator.canShare({files:[pdfFile]})){
-        navigator.share({
-          files:[pdfFile],
-          title: pdfTitle
+      navigator.share({
+          files:[pdfFile]
         }).then(function(){
           showMsg('\u2705 PDF geteilt.');
         }).catch(function(err){
