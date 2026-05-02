@@ -669,7 +669,7 @@ function doPDF(){
     y+=lineH;
     doc.text('Gerne unterbreiten wir Ihnen folgendes Angebot:', marginL, y);
 // === TABELLE mit autotable (Etappe 2B - VERBESSERT) ===
-    var tableY = y + 12; // Abstand zur Anrede
+    var tableY = y + 10; // Abstand zur Anrede
 
     // Spalten-Header
     var head = [['POS.','MENGE','BRAND','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
@@ -836,7 +836,7 @@ function doPDF(){
     var afterTableY = doc.lastAutoTable.finalY;
 
     // Personalisierter Text (wenn aktiviert) — direkt nach Tabelle
-    var blockY = afterTableY + 8;
+    var blockY = afterTableY + 10;
     if(S.showPersText && S.persText){
       doc.setFont('helvetica','normal');
       doc.setFontSize(10);
@@ -851,7 +851,7 @@ function doPDF(){
     doc.setFontSize(10);
     doc.setTextColor(51,51,51);
     var lineSpacing = 5;
-    var paragraphSpacing = 4;
+    var paragraphSpacing = 2;
 
     function addParagraph(text){
       var lines = doc.splitTextToSize(text, pageW - 2*marginL);
