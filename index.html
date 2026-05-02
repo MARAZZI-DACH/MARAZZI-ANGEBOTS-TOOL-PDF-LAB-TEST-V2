@@ -238,6 +238,11 @@ button{cursor:pointer}
         <button class="btn-transport off" id="btn-transport" onclick="S.showTransport=!S.showTransport;this.className='btn-transport '+(S.showTransport?'on':'off');this.textContent=S.showTransport?'\u2713 Transportkosten aktiv':'+ Transportkosten Extra';renderTransport()">+ Transportkosten Extra</button>
       </div>
       <div style="width:1px;height:24px;background:#ddd"></div>
+     <div class="opt-item">
+        <button class="btn-transport off" id="btn-pers-text" onclick="S.showPersText=!S.showPersText;this.className='btn-transport '+(S.showPersText?'on':'off');this.textContent=S.showPersText?'\u2713 Personalisierter Text aktiv':'+ Personalisierter Text im Angebot';renderPersText()">+ Personalisierter Text im Angebot</button>
+      </div>
+      <div style="width:1px;height:24px;background:#ddd"></div>
+    
       <div class="opt-item">
         <span class="lnr-label">Lfd. Nr.</span>
 <input type="text" id="f-lnr" class="lnr-input" value="01" maxlength="2" readonly style="background:#f5f5f5;cursor:not-allowed" title="Wird automatisch vergeben">
@@ -250,6 +255,10 @@ button{cursor:pointer}
       <div class="opt-item" style="flex:1 1 100%;flex-direction:column;align-items:flex-start;border-top:1px solid #eee;padding-top:12px;margin-top:6px">
         <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#000;margin-bottom:6px">Interne Notiz <span style="color:#bbb;text-transform:none;letter-spacing:0;font-size:10px">(nicht im PDF, nur intern gespeichert)</span></label>
         <textarea id="f-notiz" rows="2" placeholder="" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;resize:vertical;min-height:50px;background:#fafafa;box-sizing:border-box" oninput="S.notiz=this.value"></textarea>
+      </div>
+   <div class="opt-item" id="pers-text-box" style="display:none;flex:1 1 100%;flex-direction:column;align-items:flex-start;border-top:1px solid #eee;padding-top:12px;margin-top:6px">
+        <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#000;margin-bottom:6px">Personalisierter Text im Angebot <span style="color:#bbb;text-transform:none;letter-spacing:0;font-size:10px">(im PDF sichtbar, max. 500 Zeichen)</span> <span id="pers-text-counter" style="color:#bbb;text-transform:none;letter-spacing:0;font-size:10px;margin-left:8px">0 / 500</span></label>
+        <textarea id="f-pers-text" rows="3" placeholder="z.B. Lieferzeit ca. 6-8 Wochen. Sonderpreis gueltig bis 31.12.2026." maxlength="500" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;resize:vertical;min-height:70px;background:#fffef5;box-sizing:border-box" oninput="S.persText=this.value;document.getElementById('pers-text-counter').textContent=this.value.length+' / 500'"></textarea>
       </div>
     </div>
   </div>
@@ -309,7 +318,7 @@ var GR_OPT=[0.50,0.55];
 var ZR1_OPT=[0,0.02,0.03,0.05,0.07,0.08,0.10,0.12,0.15,0.18,0.20,0.30,0.50];
 var ZR23_OPT=[0,0.02,0.03,0.05,0.07,0.08,0.10,0.12,0.15,0.18,0.20];
 
-var S={erst:'',ini:'',bv:'',kunde:'',ansprech:'',kat:'',marke:'',ocPdf:'',prom:'',pos:[],showRab:false,showBrutto:false,lnr:'01',showTransport:false,transportKosten:'' ,notiz:'',gespeichert:false,gespeichertId:null,geladenVon:null,letzteSpeicherNr:''};
+var S={erst:'',ini:'',bv:'',kunde:'',ansprech:'',kat:'',marke:'',ocPdf:'',prom:'',pos:[],showRab:false,showBrutto:false,lnr:'01',showTransport:false,transportKosten:'' ,showPersText:false,persText:'',notiz:'',gespeichert:false,gespeichertId:null,geladenVon:null,letzteSpeicherNr:''};
 
 var SIGS={};
 function getSig(n){return null;}
@@ -559,7 +568,22 @@ function renderTransport(){
     '<span style="font-size:11px;color:#aaa">\u2192 erscheint als letzte Position im PDF</span>'+
   '</div>';
 }
-
+function renderPersText(){
+  var box=document.getElementById('pers-text-box');
+  var ta=document.getElementById('f-pers-text');
+  if(!box||!ta)return;
+  if(S.showPersText){
+    box.style.display='flex';
+    ta.value=S.persText||'';
+    document.getElementById('pers-text-counter').textContent=(ta.value.length)+' / 500';
+  } else {
+    box.style.display='none';
+    S.persText='';
+    ta.value='';
+    document.getElementById('pers-text-counter').textContent='0 / 500';
+  }
+}
+  
 function chgR(i,f,v){S.pos[i][f]=parseFloat(v);var p=S.pos[i];p.net=calcNet(p.brutto,p.GR,p.zr1,p.zr2,p.zr3);p.nm='';renderPos()}
 function delP(i){S.pos.splice(i,1);renderPos()}
 function focN(el,i){var p=S.pos[i];var isM=p.nm!==''&&!isNaN(parseFloat(p.nm));if(!isM)el.value=p.net.toFixed(2);el.select();S.pos[i].nm=isM?p.nm:p.net.toFixed(2)}
@@ -1112,6 +1136,14 @@ async function ladeAngebotInsTool(id){
     S.transportKosten = data.transport_kosten !== null && data.transport_kosten !== undefined
       ? String(data.transport_kosten).replace('.', ',')
       : '';
+    S.showPersText = !!data.zeigt_pers_text;
+    S.persText = data.pers_text || '';
+    var pbLoad = document.getElementById('btn-pers-text');
+    if(pbLoad){
+      pbLoad.className = 'btn-transport ' + (S.showPersText ? 'on' : 'off');
+      pbLoad.textContent = S.showPersText ? '\u2713 Personalisierter Text aktiv' : '+ Personalisierter Text im Angebot';
+    }
+    renderPersText();
     var tb = document.getElementById('btn-transport');
     if(tb){
       if(S.showTransport){
@@ -1277,7 +1309,7 @@ var parentId = null;
       angebots_datum_final = S.geladenVon.angebots_datum || angebots_datum_final;
       laufende_nr_final = S.geladenVon.laufende_nr || laufende_nr_final;
     }
-    const datensatz = {
+   const datensatz = {
       ersteller_kuerzel: ersteller_kuerzel_final,
       angebots_datum: angebots_datum_final,
       laufende_nr: laufende_nr_final,
@@ -1293,6 +1325,8 @@ var parentId = null;
       zeigt_rabatte: !!S.showRab,
       zeigt_brutto: !!S.showBrutto,
       zeigt_transport: !!S.showTransport,
+      zeigt_pers_text: !!S.showPersText,
+      pers_text: S.persText || '',
       transport_kosten: S.transportKosten ? parseFloat(String(S.transportKosten).replace(',','.')) || null : null,
       positionen: S.pos || [],
       gesamt_summe: gesamt,
@@ -1389,7 +1423,7 @@ function markUnsaved(){
   function showMsg(t){var el=document.getElementById('msg-box');el.textContent=t;el.style.display='block';setTimeout(function(){el.style.display='none'},8000)}
 
 function resetAll(){
-  S.pos=[];S.bv='';S.kunde='';S.ansprech='';S.kat='';S.marke='';S.ocPdf='';S.prom='';S.lnr='01';S.showRab=false;S.showBrutto=false;S.showTransport=false;S.transportKosten='';document.getElementById('transport-row-container').innerHTML='';var tb=document.getElementById('btn-transport');if(tb){tb.className='btn-transport off';tb.textContent='+ Transportkosten Extra';}
+  S.pos=[];S.bv='';S.kunde='';S.ansprech='';S.kat='';S.marke='';S.ocPdf='';S.prom='';S.lnr='01';S.showRab=false;S.showBrutto=false;S.showTransport=false;S.transportKosten='';document.getElementById('transport-row-container').innerHTML='';var tb=document.getElementById('btn-transport');if(tb){tb.className='btn-transport off';tb.textContent='+ Transportkosten Extra';}S.showPersText=false;S.persText='';var pb=document.getElementById('btn-pers-text');if(pb){pb.className='btn-transport off';pb.textContent='+ Personalisierter Text im Angebot';}renderPersText();
   document.getElementById('f-bv').value='';
   document.getElementById('f-kunde').value='';
   document.getElementById('f-ansprech').value='';
