@@ -864,9 +864,11 @@ function doPDF(useOriginal){
           if(data.row.raw._isAlt){
             data.cell.styles.textColor = [21,101,192]; // #1565c0
           }
-          // NETTOPREIS-Spalte: Rot bleibt, außer bei Alt-Positionen
+         // NETTOPREIS-Spalte: Rot bleibt, außer bei Alt-Positionen
           if(data.column.index === 10 && !data.row.raw._isAlt){
             data.cell.styles.textColor = [204,0,0];
+            data.cell.styles.fillColor = [220,235,245]; // hellblau
+            data.cell.styles.fontStyle = 'bold';
           }
         }
       },
