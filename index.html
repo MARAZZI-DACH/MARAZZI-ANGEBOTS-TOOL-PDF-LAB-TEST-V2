@@ -1107,9 +1107,7 @@ async function ladeAngebotInsTool(id){
       }
     }
     S.showRab = !!data.zeigt_rabatte;
-    document.getElementById('f-rab').checked = S.showRab;
     S.showBrutto = !!data.zeigt_brutto;
-    document.getElementById('f-brutto').checked = S.showBrutto;
     S.showTransport = !!data.zeigt_transport;
     S.transportKosten = data.transport_kosten !== null && data.transport_kosten !== undefined
       ? String(data.transport_kosten).replace('.', ',')
