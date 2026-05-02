@@ -233,16 +233,7 @@ button{cursor:pointer}
       <div class="fl"><label>Objektberater</label><select id="f-prom" onchange="S.prom=this.value"></select></div>
     </div>
     <div class="opts-row">
-      <div class="opt-item">
-        <input type="checkbox" id="f-brutto" onchange="S.showBrutto=this.checked;if(!this.checked){S.showRab=false;document.getElementById('f-rab').checked=false}">
-        <label for="f-brutto">Bruttopreis im PDF anzeigen</label>
-      </div>
-      <div class="opt-item">
-        <input type="checkbox" id="f-rab" onchange="S.showRab=this.checked;if(this.checked){S.showBrutto=true;document.getElementById('f-brutto').checked=true}">
-        <label for="f-rab">+ Rabattspalten anzeigen</label>
-      </div>
-      
-      <div style="width:1px;height:24px;background:#ddd"></div>
+     
       <div class="opt-item">
         <button class="btn-transport off" id="btn-transport" onclick="S.showTransport=!S.showTransport;this.className='btn-transport '+(S.showTransport?'on':'off');this.textContent=S.showTransport?'\u2713 Transportkosten aktiv':'+ Transportkosten Extra';renderTransport()">+ Transportkosten Extra</button>
       </div>
