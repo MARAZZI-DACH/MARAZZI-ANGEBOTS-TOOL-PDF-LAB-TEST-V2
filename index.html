@@ -628,13 +628,7 @@ function doPDF(){
     var logoW=50;
     // doc.addImage(logoBase64, 'PNG', (pageW-logoW)/2, marginT, logoW, 12);
 
-    // === ETAPPE 2A Marker (in Test-Phase, später entfernen) ===
-    doc.setFont('helvetica','italic');
-    doc.setFontSize(7);
-    doc.setTextColor(204,0,0);
-    doc.text('[ETAPPE 2A: Header-Test - Tabelle folgt in 2B]', pageW/2, marginT+18, {align:'center'});
-    doc.setTextColor(0,0,0);
-
+   
     // === HEADER-BLOCK (Datum, Angebot Nr., etc.) ===
     var yStart=marginT+28;
     var labelX=marginL;
@@ -836,9 +830,68 @@ function doPDF(){
         }
       }
     });
+    
+    // === BLOCK ZWISCHEN TABELLE UND SCHLUSS-TEXT ===
+    // Position nach der Tabelle ermitteln
+    var afterTableY = doc.lastAutoTable.finalY;
+
+    // Personalisierter Text (wenn aktiviert) — direkt nach Tabelle
+    var blockY = afterTableY + 8;
+    if(S.showPersText && S.persText){
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(10);
+      doc.setTextColor(51,51,51);
+      var persLines = doc.splitTextToSize(String(S.persText), pageW - 2*marginL);
+      doc.text(persLines, marginL, blockY);
+      blockY += persLines.length * 5 + 6;
+    }
+
+    // === SCHLUSS-TEXT-BLOCK (5 Absätze) ===
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(51,51,51);
+    var lineSpacing = 5;
+    var paragraphSpacing = 4;
+
+    function addParagraph(text){
+      var lines = doc.splitTextToSize(text, pageW - 2*marginL);
+      lines.forEach(function(line){
+        doc.text(line, marginL, blockY);
+        blockY += lineSpacing;
+      });
+      blockY += paragraphSpacing;
+    }
+
+    addParagraph('Alle Preise gelten - sofern in der Tabelle nicht anders angegeben - ab Werk (EXW) des angegebenen Lagers.');
+    addParagraph('Bei Lieferungen frei Haus (DAP) erfolgt die Anlieferung grundsaetzlich ohne Abladen und in vollen LKW mit 24t.');
+    addParagraph('Die Preise basieren auf den aktuell gueltigen Listenpreisen und stehen unter dem Vorbehalt etwaiger zukuenftiger Preisanpassungen.');
+    addParagraph('Bei Nachbestellungen gelten die angebotenen Preise ausschliesslich bei Abnahme in vollen Paletten. Kleinere Mengen sind gesondert anzufragen.');
+
+    // Letzter Absatz mit Angebotsnummer
+    var lastPara = 'Bitte geben Sie bei Ihren Bestellungen stets die Angebotsnummer ' + nr + ' sowie das jeweilige Bauvorhaben an. Nur so kann gewaehrleistet werden, dass die korrekten Preise berechnet werden.';
+    var lastLines = doc.splitTextToSize(lastPara, pageW - 2*marginL);
+    lastLines.forEach(function(line){
+      doc.text(line, marginL, blockY);
+      blockY += lineSpacing;
+    });
+    blockY += paragraphSpacing;
+
+    // === GRUSS + SIGNATUR ===
+    blockY += 4;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.text('Mit freundlichen Gruessen', marginL, blockY);
+    blockY += lineSpacing + 2;
+
+    doc.setFont('helvetica','bolditalic');
+    doc.text('Marazzi Group S.r.l.', marginL, blockY);
+    blockY += lineSpacing;
+
+    doc.setFont('helvetica','normal');
+    doc.text(String(S.erst || ''), marginL, blockY);
     // === Datei speichern (Direkt-Download) ===
     doc.save(pdfTitle+'.pdf');
-    showMsg('\u2705 PDF heruntergeladen (Etappe 2A: nur Header).');
+    showMsg('\u2705 PDF heruntergeladen.');
 
   }catch(e){
     console.error('PDF-Fehler:',e);
