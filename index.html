@@ -548,7 +548,7 @@ function renderPos(){
     h+='<td style="text-align:center">'+((p.noRab||p.b0)?'<span style="font-size:11px;color:#999">&ndash;</span>':'<select onchange="chgR('+i+',\'zr1\',this.value)">'+selOpts(ZR1_OPT,p.zr1,zrLabel)+'</select>')+'</td>';
     h+='<td style="text-align:center">'+((p.noRab||p.b0)?'<span style="font-size:11px;color:#999">&ndash;</span>':'<select onchange="chgR('+i+',\'zr2\',this.value)">'+selOpts(ZR23_OPT,p.zr2)+'</select>')+'</td>';
     h+='<td style="text-align:center">'+((p.noRab||p.b0)?'<span style="font-size:11px;color:#999">&ndash;</span>':'<select onchange="chgR('+i+',\'zr3\',this.value)">'+selOpts(ZR23_OPT,p.zr3)+'</select>')+'</td>';
-    h+='<td style="text-align:right"><input type="text" class="ni'+(isM?' man':'')+'" value="'+(isM?esc(p.nm):fmt(nv))+'" onfocus="focN(this,'+i+')" onblur="blurN(this,'+i+')" onchange="S.pos['+i+'].nm=this.value.replace(/[^\\d.,]/g,\'\').replace(\',\',\'.\')"></td>';
+    h+='<td style="text-align:right"><input type="text" class="ni'+(isM?' man':'')+'" value="'+(isM?esc(String(p.nm).replace('.',',')):fmt(nv))+'" onfocus="focN(this,'+i+')" onblur="blurN(this,'+i+')" onchange="S.pos['+i+'].nm=this.value.replace(/[^\\d.,]/g,\'\').replace(\',\',\'.\')"></td>';
     h+='<td><button class="bd" onclick="delP('+i+')">\u00d7</button></td>';
     h+='</tr>';
   });
@@ -586,7 +586,7 @@ function renderPersText(){
   
 function chgR(i,f,v){S.pos[i][f]=parseFloat(v);var p=S.pos[i];p.net=calcNet(p.brutto,p.GR,p.zr1,p.zr2,p.zr3);p.nm='';renderPos()}
 function delP(i){S.pos.splice(i,1);renderPos()}
-function focN(el,i){var p=S.pos[i];var isM=p.nm!==''&&!isNaN(parseFloat(p.nm));if(!isM)el.value=p.net.toFixed(2);el.select();S.pos[i].nm=isM?p.nm:p.net.toFixed(2)}
+function focN(el,i){var p=S.pos[i];var isM=p.nm!==''&&!isNaN(parseFloat(p.nm));if(!isM)el.value=p.net.toFixed(2).replace('.',',');el.select();S.pos[i].nm=isM?p.nm:p.net.toFixed(2)}
 function blurN(el,i){var p=S.pos[i];if(el.value===''||el.value===fmt(p.net)){S.pos[i].nm='';renderPos();}else{renderPos()}}
 
 function markChanged(){
