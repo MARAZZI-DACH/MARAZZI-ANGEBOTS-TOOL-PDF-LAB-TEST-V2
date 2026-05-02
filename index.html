@@ -874,19 +874,10 @@ function doPDF(useOriginal){
           }
         }
       },
-      didDrawPage: function(data){
+     didDrawPage: function(data){
         var pageNum = doc.internal.getCurrentPageInfo().pageNumber;
-        // Mini-Header auf Seite 2+
         if(pageNum > 1){
-          doc.setFont('helvetica','bold');
-          doc.setFontSize(10);
-          doc.setTextColor(44,62,90); // Marazzi Navy
-          doc.text('MARAZZI', marginL, 10);
-          doc.setFont('helvetica','normal');
-          doc.setFontSize(8);
-          doc.setTextColor(100,100,100);
-          doc.text('Angebot ' + nr + ' (Fortsetzung)', pageW - marginL, 10, {align:'right'});
-          doc.setTextColor(0,0,0);
+          drawMiniHeader();
         }
       }
     });
@@ -897,13 +888,26 @@ function doPDF(useOriginal){
 
     // Personalisierter Text (wenn aktiviert) — direkt nach Tabelle
     var blockY = afterTableY + 10;
+    // === MINI-HEADER Helper (fuer didDrawPage UND manuelle Page-Breaks) ===
+    function drawMiniHeader(){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(44,62,90);
+      doc.text('MARAZZI', marginL, 10);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100,100,100);
+      doc.text('Angebot ' + nr + ' (Fortsetzung)', pageW - marginL, 10, {align:'right'});
+      doc.setTextColor(0,0,0);
+    }
     // Page-Break-Helper: pruefe ob noch genug Platz fuer den naechsten Block ist
     function ensureSpace(neededHeight){
       var pageHeight = 297; // A4 Hoehe in mm
       var marginBottom = 15; // unterer Rand
       if(blockY + neededHeight > pageHeight - marginBottom){
         doc.addPage();
-        blockY = 20; // Top-Margin auf neuer Seite (mehr Platz, weil Mini-Header oben)
+        drawMiniHeader();
+        blockY = 25; // Top-Margin auf neuer Seite (unter Mini-Header)
       }
     }
   if(S.showPersText && S.persText){
