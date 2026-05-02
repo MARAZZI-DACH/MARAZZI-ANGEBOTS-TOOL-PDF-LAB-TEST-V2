@@ -674,20 +674,31 @@ function doPDF(){
     doc.text('vielen Dank fuer Ihre Anfrage zum oben genannten Bauvorhaben.', marginL, y);
     y+=lineH;
     doc.text('Gerne unterbreiten wir Ihnen folgendes Angebot:', marginL, y);
-// === TABELLE mit autotable (Etappe 2B) ===
+// === TABELLE mit autotable (Etappe 2B - VERBESSERT) ===
     var tableY = y + 12; // Abstand zur Anrede
 
     // Spalten-Header
     var head = [['POS.','MENGE','BRAND','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
 
+    // Zebra-Farben (alternierend pro Position)
+    var colorLight = [240,248,240]; // #f0f8f0 hellgrün
+    var colorDark  = [224,238,224]; // #e0eee0 etwas dunkler grün
+
     // Daten-Zeilen aus S.pos zusammenbauen
     var body = [];
     var posNum = 0;
+    var lastBgColor = colorLight; // Merker für Sub-Zeilen und Alt-Positionen
 
     S.pos.forEach(function(p, i){
       var nv = getND(p);
       var isAlt = p.menge === 'ALT';
-      posNum = isAlt ? posNum : posNum + 1;
+
+      // Position-Nummer und Zebra-Farbe nur bei Hauptpositionen wechseln
+      if(!isAlt){
+        posNum = posNum + 1;
+        // Wechsel hell/dunkel pro Hauptposition
+        lastBgColor = (posNum % 2 === 1) ? colorLight : colorDark;
+      }
 
       // Hauptzeile der Position
       var row = [
@@ -704,27 +715,39 @@ function doPDF(){
         fmt(nv)
       ];
 
-      // Alt-Positionen markieren mit Farb-Flag
-      if(isAlt){
-        row._isAlt = true;
-      }
+      // Flags für didParseCell
+      row._isAlt = isAlt;
+      row._bgColor = lastBgColor;
+      row._posNum = isAlt ? '' : posNum;
 
       body.push(row);
 
       // Sub-Zeile "Weitere Farbvarianten..." wenn aktiviert
       if(p.showAlt){
-        var subRow = [{
-          content: 'Weitere Farbvarianten sind zum gleichen Preis erhaeltlich',
-          colSpan: 11,
-          styles: {
-            fontStyle: 'italic',
-            fontSize: 7,
-            textColor: [102,102,102],
-            fillColor: [255,255,255],
-            halign: 'left',
-            cellPadding: {top:1, right:2, bottom:1, left:8}
+        // Neue Sub-Zeile: 2 Zellen — POS-Nummer + Text mit colSpan 10
+        var subRow = [
+          {
+            content: String(posNum),
+            styles: {
+              fillColor: lastBgColor,
+              halign: 'center',
+              fontSize: 7,
+              cellPadding: {top:1, right:1, bottom:1, left:1}
+            }
+          },
+          {
+            content: 'Weitere Farbvarianten sind zum gleichen Preis erhaeltlich',
+            colSpan: 10,
+            styles: {
+              fontStyle: 'italic',
+              fontSize: 7,
+              textColor: [102,102,102],
+              fillColor: lastBgColor,
+              halign: 'left',
+              cellPadding: {top:1, right:2, bottom:1, left:4}
+            }
           }
-        }];
+        ];
         body.push(subRow);
       }
     });
@@ -732,11 +755,12 @@ function doPDF(){
     // Transportkosten-Zeile (wenn aktiviert)
     if(S.showTransport && S.transportKosten){
       posNum++;
+      var tkBgColor = (posNum % 2 === 1) ? colorLight : colorDark;
       var tkVal = String(S.transportKosten).replace(',','.');
       var tkNum = parseFloat(tkVal);
       var tkFmt = isNaN(tkNum) ? (S.transportKosten + ' EUR') : fmt(tkNum);
 
-      body.push([
+      var tkRow = [
         String(posNum),
         '1',
         '-',
@@ -748,7 +772,11 @@ function doPDF(){
         'Pausch.',
         '-',
         tkFmt
-      ]);
+      ];
+      tkRow._isAlt = false;
+      tkRow._bgColor = tkBgColor;
+      tkRow._posNum = posNum;
+      body.push(tkRow);
     }
 
     // Tabelle rendern
@@ -775,26 +803,40 @@ function doPDF(){
         halign: 'center',
         valign: 'middle'
       },
-      bodyStyles: {
-        fillColor: [240,248,240] // Hellgrün #f0f8f0
-      },
       columnStyles: {
-        0: {halign:'center', cellWidth: 10}, // POS
-        1: {halign:'center', cellWidth: 12}, // MENGE
-        2: {halign:'center', cellWidth: 18}, // BRAND
-        3: {halign:'left',   cellWidth: 22}, // SERIE
-        4: {halign:'left',   cellWidth: 38}, // ARTIKEL
-        5: {halign:'center', cellWidth: 14, fontStyle:'bold'}, // KODE
-        6: {halign:'center', cellWidth: 17}, // FORMAT
-        7: {halign:'center', cellWidth: 12, fontStyle:'bold'}, // LAGER
-        8: {halign:'center', cellWidth: 12, fontStyle:'bold'}, // FRACHT
-        9: {halign:'center', cellWidth: 10}, // ME
-        10:{halign:'right',  cellWidth: 22, fontStyle:'bold', textColor:[204,0,0]} // NETTOPREIS rot fett
+        0:  {halign:'center', cellWidth: 10}, // POS
+        1:  {halign:'center', cellWidth: 12}, // MENGE
+        2:  {halign:'center', cellWidth: 18}, // BRAND
+        3:  {halign:'left',   cellWidth: 22}, // SERIE
+        4:  {halign:'left',   cellWidth: 40}, // ARTIKEL (etwas breiter)
+        5:  {halign:'center', cellWidth: 14, fontStyle:'bold'}, // KODE
+        6:  {halign:'center', cellWidth: 18}, // FORMAT (etwas breiter)
+        7:  {halign:'center', cellWidth: 12, fontStyle:'bold'}, // LAGER
+        8:  {halign:'center', cellWidth: 14, fontStyle:'bold'}, // FRACHT (breiter, damit FRACHT nicht umbricht)
+        9:  {halign:'center', cellWidth: 10}, // ME
+        10: {halign:'right',  cellWidth: 19, fontStyle:'bold', textColor:[204,0,0]} // NETTOPREIS (etwas schmaler)
       },
       didParseCell: function(data){
-        // Alt-Positionen blau einfärben
-        if(data.section === 'body' && data.row.raw && data.row.raw._isAlt){
-          data.cell.styles.textColor = [21,101,192]; // #1565c0
+        if(data.section === 'body' && data.row.raw){
+          // Hintergrundfarbe aus _bgColor anwenden (Zebra)
+          if(data.row.raw._bgColor && !data.cell.styles.fillColor){
+            data.cell.styles.fillColor = data.row.raw._bgColor;
+          } else if(data.row.raw._bgColor){
+            // Wenn Zelle eigene fillColor hat (von Sub-Zeilen-Definition), respektieren
+            // Sonst überschreiben mit Zebra-Farbe
+            if(JSON.stringify(data.cell.styles.fillColor) === JSON.stringify([255,255,255]) ||
+               !data.cell.styles.fillColor){
+              data.cell.styles.fillColor = data.row.raw._bgColor;
+            }
+          }
+          // Alt-Positionen: blaue Schrift
+          if(data.row.raw._isAlt){
+            data.cell.styles.textColor = [21,101,192]; // #1565c0
+          }
+          // NETTOPREIS-Spalte: Rot bleibt, auch bei Alt
+          if(data.column.index === 10 && !data.row.raw._isAlt){
+            data.cell.styles.textColor = [204,0,0];
+          }
         }
       }
     });
