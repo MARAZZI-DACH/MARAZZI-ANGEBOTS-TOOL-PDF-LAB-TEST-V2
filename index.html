@@ -890,16 +890,27 @@ function doPDF(useOriginal){
     // Personalisierter Text (wenn aktiviert) — direkt nach Tabelle
     var blockY = afterTableY + 10;
     // === MINI-HEADER Helper (fuer didDrawPage UND manuelle Page-Breaks) ===
+    // Identisches Layout wie Seite 1: Logo mittig + Angebot Nr. + Bauvorhaben
     function drawMiniHeader(){
+      // Logo zentriert oben (gleiche Position wie Seite 1)
+      doc.addImage(logoBase64, 'PNG', (pageW-logoW)/2, marginT, logoW, logoH);
+      // Header-Zeilen (gleiche Position wie Seite 1)
+      var miniY = marginT + 28;
+      // Angebot Nr.
       doc.setFont('helvetica','bold');
       doc.setFontSize(10);
-      doc.setTextColor(44,62,90);
-      doc.text('MARAZZI', marginL, 10);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100,100,100);
-      doc.text('Angebot ' + nr + ' (Fortsetzung)', pageW - marginL, 10, {align:'right'});
       doc.setTextColor(0,0,0);
+      doc.text('Angebot Nr.:', labelX, miniY);
+      doc.setTextColor(204,0,0);
+      doc.text(String(nr), valueX, miniY);
+      doc.setTextColor(0,0,0);
+      // Bauvorhaben (eine Zeile drunter)
+      miniY += lineH;
+      if(S.bv){
+        doc.setFont('helvetica','bold');
+        doc.text('Bauvorhaben:', labelX, miniY);
+        doc.text(String(S.bv), valueX, miniY);
+      }
     }
     // Page-Break-Helper: pruefe ob noch genug Platz fuer den naechsten Block ist
     function ensureSpace(neededHeight){
@@ -908,7 +919,7 @@ function doPDF(useOriginal){
       if(blockY + neededHeight > pageHeight - marginBottom){
         doc.addPage();
         drawMiniHeader();
-        blockY = 25; // Top-Margin auf neuer Seite (unter Mini-Header)
+        blockY = marginT + 28 + (2 * lineH) + 8; // unter Mini-Header (Logo + 2 Header-Zeilen + Abstand)
       }
     }
   if(S.showPersText && S.persText){
