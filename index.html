@@ -890,26 +890,24 @@ function doPDF(useOriginal){
         }
       }
     });
-    // === SEITENZAHL UNTEN AUF JEDER SEITE ===
-    var totalPages = doc.internal.getNumberOfPages();
-    for(var i = 1; i <= totalPages; i++){
-      doc.setPage(i);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      doc.setTextColor(150,150,150);
-      doc.text('Seite ' + i + ' von ' + totalPages, pageW - marginL, 287, {align:'right'});
-      doc.setTextColor(0,0,0);
-    }
-    // Zur letzten Seite zurueck, damit Schluss-Text dort gerendert wird
-    doc.setPage(totalPages);
-    
+   
     // === BLOCK ZWISCHEN TABELLE UND SCHLUSS-TEXT ===
     // Position nach der Tabelle ermitteln
     var afterTableY = doc.lastAutoTable.finalY;
 
     // Personalisierter Text (wenn aktiviert) — direkt nach Tabelle
     var blockY = afterTableY + 10;
-    if(S.showPersText && S.persText){
+    // Page-Break-Helper: pruefe ob noch genug Platz fuer den naechsten Block ist
+    function ensureSpace(neededHeight){
+      var pageHeight = 297; // A4 Hoehe in mm
+      var marginBottom = 15; // unterer Rand
+      if(blockY + neededHeight > pageHeight - marginBottom){
+        doc.addPage();
+        blockY = 20; // Top-Margin auf neuer Seite (mehr Platz, weil Mini-Header oben)
+      }
+    }
+  if(S.showPersText && S.persText){
+      ensureSpace(40); // ~40mm fuer personalisierten Text
       doc.setFont('helvetica','normal');
       doc.setFontSize(10);
       doc.setTextColor(51,51,51);
@@ -921,6 +919,7 @@ function doPDF(useOriginal){
       blockY += 6;
     }
 
+    ensureSpace(80); // ~80mm fuer Schluss-Text + Signatur
     // === SCHLUSS-TEXT-BLOCK (5 Absätze) ===
     doc.setFont('helvetica','normal');
     doc.setFontSize(10);
@@ -964,6 +963,16 @@ function doPDF(useOriginal){
 
     doc.setFont('helvetica','normal');
     doc.text(String(S.erst || ''), marginL, blockY);
+    // === SEITENZAHL UNTEN AUF JEDER SEITE (am Ende, weil jetzt alle Seiten existieren) ===
+    var totalPages = doc.internal.getNumberOfPages();
+    for(var i = 1; i <= totalPages; i++){
+      doc.setPage(i);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(150,150,150);
+      doc.text('Seite ' + i + ' von ' + totalPages, pageW - marginL, 287, {align:'right'});
+      doc.setTextColor(0,0,0);
+    }
     // === Datei speichern (Direkt-Download) ===
     doc.save(pdfTitle+'.pdf');
     showMsg('\u2705 PDF heruntergeladen.');
