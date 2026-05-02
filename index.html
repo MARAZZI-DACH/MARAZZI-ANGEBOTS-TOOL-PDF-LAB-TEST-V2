@@ -644,13 +644,8 @@ function doPDF(useOriginal){
   if(S.kunde)pdfParts.push(S.kunde.split('|')[0].trim());
   var pdfTitle=pdfParts.join(' - ').replace(/\./g,'');
 
-  // iOS-Pfad: unverändert lassen (window.print)
-  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&'ontouchend' in document);
-  if(isIOS){
-    showMsg('iOS-Pfad: Etappe 2A noch nicht implementiert. Bitte am PC testen.');
-    return;
-  }
-
+// iOS-Erkennung (wird spaeter beim PDF-Output beruecksichtigt)
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&'ontouchend' in document); 
   // PC-Pfad: jsPDF
   try{
     // Library-Check
@@ -989,9 +984,15 @@ function doPDF(useOriginal){
       doc.text('Seite ' + i + ' von ' + totalPages, pageW - marginL, 287, {align:'right'});
       doc.setTextColor(0,0,0);
     }
-    // === Datei speichern (Direkt-Download) ===
-    doc.save(pdfTitle+'.pdf');
-    showMsg('\u2705 PDF heruntergeladen.');
+// === Datei ausgeben: iOS = neuer Tab, PC = Direkt-Download ===
+    if(isIOS){
+      var blobUrl = doc.output('bloburl');
+      window.open(blobUrl, '_blank');
+      showMsg('\u2705 PDF in neuem Tab geoeffnet.');
+    } else {
+      doc.save(pdfTitle+'.pdf');
+      showMsg('\u2705 PDF heruntergeladen.');
+    }
 
   }catch(e){
     console.error('PDF-Fehler:',e);
