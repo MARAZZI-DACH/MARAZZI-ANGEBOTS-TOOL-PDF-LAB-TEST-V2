@@ -235,11 +235,11 @@ button{cursor:pointer}
     <div class="opts-row">
      
       <div class="opt-item">
-        <button class="btn-transport off" id="btn-transport" onclick="S.showTransport=!S.showTransport;this.className='btn-transport '+(S.showTransport?'on':'off');this.textContent=S.showTransport?'\u2713 Transportkosten aktiv':'+ Transportkosten Extra';renderTransport()">+ Transportkosten Extra</button>
+        <button class="btn-transport off" id="btn-transport" onclick="S.showTransport=!S.showTransport;this.className='btn-transport '+(S.showTransport?'on':'off');this.textContent=S.showTransport?'\u2713 Transportkosten aktiv':'+ Transportkosten Extra';renderTransport();markChanged()">+ Transportkosten Extra</button>
       </div>
       <div style="width:1px;height:24px;background:#ddd"></div>
      <div class="opt-item">
-        <button class="btn-transport off" id="btn-pers-text" onclick="S.showPersText=!S.showPersText;this.className='btn-transport '+(S.showPersText?'on':'off');this.textContent=S.showPersText?'\u2713 Personalisierter Text aktiv':'+ Personalisierter Text im Angebot';renderPersText()">+ Personalisierter Text im Angebot</button>
+        <button class="btn-transport off" id="btn-pers-text" onclick="S.showPersText=!S.showPersText;this.className='btn-transport '+(S.showPersText?'on':'off');this.textContent=S.showPersText?'\u2713 Personalisierter Text aktiv':'+ Personalisierter Text im Angebot';renderPersText();markChanged()">+ Personalisierter Text im Angebot</button>
       </div>
       <div style="width:1px;height:24px;background:#ddd"></div>
     
@@ -1526,7 +1526,29 @@ document.addEventListener('click',function(e){
     document.getElementById('sr-results').style.display='none';
 });
 
-init();
+// === ÄNDERUNGS-TRACKING (Block A-6) ===
+// Hört auf Eingaben und Auswahl-Änderungen im Tool
+// Setzt S.geaendert=true, sobald User etwas an einem geladenen Angebot ändert
+document.addEventListener('input', function(e){
+  if(!S.geladenVon) return;
+  var t = e.target;
+  if(!t || !t.tagName) return;
+  if(t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA' && t.tagName !== 'SELECT') return;
+  if(t.id === 's-q' || t.id === 's-serie') return;
+  if(t.closest && t.closest('#aufruf-akkordion')) return;
+  markChanged();
+});
+document.addEventListener('change', function(e){
+  if(!S.geladenVon) return;
+  var t = e.target;
+  if(!t || !t.tagName) return;
+  if(t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA' && t.tagName !== 'SELECT') return;
+  if(t.id === 's-q' || t.id === 's-serie') return;
+  if(t.closest && t.closest('#aufruf-akkordion')) return;
+  markChanged();
+});
+  
+  init();
 </script>
 </body>
 </html>
