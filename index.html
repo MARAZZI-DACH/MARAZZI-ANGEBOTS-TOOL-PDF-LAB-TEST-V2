@@ -1211,6 +1211,19 @@ async function ladeAngebotInsTool(id){
     document.getElementById('f-kunde').value = kundeKomplett;
     S.ansprech = data.ansprechpartner || '';
     document.getElementById('f-ansprech').value = S.ansprech;
+    S.prom = data.objektberater || '';
+    var fProm = document.getElementById('f-prom');
+    if(fProm){
+      var promFound = false;
+      for(var p = 0; p < fProm.options.length; p++){
+        if(fProm.options[p].value === S.prom){
+          fProm.selectedIndex = p;
+          promFound = true;
+          break;
+        }
+      }
+      if(!promFound) fProm.selectedIndex = 0;
+    }
     if(data.kategorie){
       document.getElementById('f-kat').value = data.kategorie;
       handleKat(data.kategorie);
