@@ -372,8 +372,24 @@ async function loadStammdaten() {
     CACHE.gebiete = gebiete;
     // currentUser per Cloudflare-Header ermitteln
     // (lokal/dev: Fallback auf christoph.thaler für Tests)
-   const cfEmail = 'christoph.thaler@marazzigroup.com'; // DEV FALLBACK
-    S.currentUser = CACHE.users.find(u => u.email === cfEmail) || CACHE.users.find(u => u.email === 'christoph.thaler@marazzigroup.com');
+   // Cloudflare Access: Email aus JWT im Header lesen
+    let cfEmail = null;
+    try {
+      const r = await fetch('/cdn-cgi/access/get-identity');
+      if(r.ok){
+        const id = await r.json();
+        cfEmail = id.email || null;
+      }
+    } catch(e){
+      console.warn('Cloudflare Identity nicht verfügbar:', e);
+    }
+    // Fallback für lokale Entwicklung
+    if(!cfEmail) cfEmail = 'christoph.thaler@marazzigroup.com';
+    S.currentUser = CACHE.users.find(u => u.email.toLowerCase() === cfEmail.toLowerCase());
+    if(!S.currentUser){
+      alert('User nicht gefunden in der Datenbank: ' + cfEmail + '\nBitte an Christoph wenden.');
+      return;
+    }
     console.log('Stammdaten geladen. User:', S.currentUser?.name, '| Rollen:', S.currentUser?.rollen);
   } catch(err) {
     console.error('loadStammdaten Fehler:', err);
