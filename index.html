@@ -1129,6 +1129,36 @@ async function ladeAngebote(append){
 
   if(!auchGeloescht) q = q.eq('status', 'aktiv');
 
+    // Sichtbarkeitsfilter je nach Rolle
+    if(S.currentUser){
+      const allesRollen = ['sales_director','customer_service','sales_assistant','area_manager'];
+      const hatAllesRolle = S.currentUser.rollen.some(r => allesRollen.includes(r));
+      if(!hatAllesRolle){
+        const eigeneEmail = S.currentUser.email;
+        const eigenesGebiet = S.currentUser.gebiet_id;
+        if(S.currentUser.rollen.includes('gebietsverantwortlicher')){
+          // Eigene + Objektberater des eigenen Gebiets + freigegebene
+          const objektberaterEmails = CACHE.users
+            .filter(u => u.gebiet_id === eigenesGebiet && u.rollen.includes('objektberater'))
+            .map(u => u.email);
+          const alleEmails = [eigeneEmail, ...objektberaterEmails];
+          q = q.or('ersteller_email.in.('+alleEmails.map(e=>'"'+e+'"').join(',')+')'
+            +',freigegeben_fuer_gebiete.cs.{"'+eigenesGebiet+'"}');
+        } else if(S.currentUser.rollen.includes('objektberater')){
+          // Eigene + Gebietsverantwortlicher + freigegebene
+          const gvEmail = CACHE.gebiete.find(g => g.id === eigenesGebiet)?.verantwortlicher_email || '';
+          q = q.or('ersteller_email.in.("'+eigeneEmail+'","'+gvEmail+'")'
+            +',freigegeben_fuer_gebiete.cs.{"'+eigenesGebiet+'"}');
+        } else if(S.currentUser.rollen.includes('key-account')){
+          q = q.or('ersteller_email.eq.'+eigeneEmail
+            +',freigegeben_fuer_gebiete.cs.{"'+eigenesGebiet+'"}');
+        } else {
+          // Nur eigene
+          q = q.eq('ersteller_email', eigeneEmail);
+        }
+      }
+    }
+
   if(ersteller) q = q.eq('ersteller_name', ersteller);
   if(datumVon) q = q.gte('angebots_datum', datumVon);
   if(datumBis) q = q.lte('angebots_datum', datumBis);
