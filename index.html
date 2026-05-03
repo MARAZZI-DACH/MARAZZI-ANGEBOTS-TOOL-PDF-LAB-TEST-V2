@@ -1224,7 +1224,7 @@ function renderAngebote(append){
     '<td style="padding:8px 10px">'+esc(a.ersteller_name || '-')+'</td>' +
     '<td style="padding:8px 10px;text-align:right">'+qmAnzeige+'</td>' +
     '<td style="padding:8px 10px;text-align:right">'+summe+'</td>' +
-    '<td style="padding:8px 4px;text-align:center"><button type="button" onclick="ladeAngebotInsTool(\''+a.id+'\')" style="'+btnStyle+';background:#E30613;color:white;padding:4px 13px">Laden</button></td>' +
+    '<td style="padding:8px 4px;text-align:center"><button type="button" onclick="ladeAngebotInsTool(\''+a.id+'\')" style="'+btnStyle+';background:#E30613;color:white;padding:6px 13px">Laden</button></td>' +
     '<td style="padding:8px 2px;text-align:center"><button type="button" onclick="setAngebotStatus(\''+a.id+'\',\'archiviert\',\''+a.status+'\')" title="'+(isArchiviert?'Aus Archiv holen':'Archivieren')+'" style="padding:4px 8px;border:none;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;background:'+(isArchiviert?'#2a9d4e':'#e0a000')+';color:white;width:30px;height:26px;padding:0;text-align:center;line-height:1">'+(isArchiviert?'↩':'📦')+'</button></td>' +
   '</tr>';
 }
