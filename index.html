@@ -473,9 +473,17 @@ function handleFreigabeCheck(id, name){
   var idx = S.freigegebenFuer.indexOf(id);
   if(idx === -1) S.freigegebenFuer.push(id);
   else S.freigegebenFuer.splice(idx, 1);
+  fillFreigabeList();
   updateFreigabeDisplay();
   markChanged();
 }
+document.addEventListener('click', function(e){
+  var wrap = document.getElementById('f-freigabe-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    var list = document.getElementById('f-freigabe-list');
+    if(list) list.style.display = 'none';
+  }
+});
 function updateFreigabeDisplay(){
   var disp = document.getElementById('f-freigabe-display');
   if(!disp) return;
