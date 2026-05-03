@@ -367,20 +367,42 @@ function fuelleAufrufDropdowns(){
     mSel.innerHTML += '<option value="'+esc(marke)+'">'+esc(marke)+'</option>';
   });
 }
-  
+var CACHE = { users: [], gebiete: [] };
+
+async function loadStammdaten() {
+  try {
+    const [ { data: users, error: e1 }, { data: gebiete, error: e2 } ] =
+      await Promise.all([
+        supa.from('users').select('*').eq('aktiv', true),
+        supa.from('gebiete').select('*')
+      ]);
+    if (e1) throw e1;
+    if (e2) throw e2;
+    CACHE.users   = users;
+    CACHE.gebiete = gebiete;
+    // currentUser per Cloudflare-Header ermitteln
+    // (lokal/dev: Fallback auf christoph.thaler für Tests)
+    const cfEmail = document.cookie.match(/CF_Authorization=/) 
+      ? null  // wird später per Header gesetzt
+      : 'christoph.thaler@marazzigroup.com'; // DEV FALLBACK
+    S.currentUser = CACHE.users.find(u => u.email === cfEmail) || CACHE.users.find(u => u.email === 'christoph.thaler@marazzigroup.com');
+    console.log('Stammdaten geladen. User:', S.currentUser?.name, '| Rollen:', S.currentUser?.rollen);
+  } catch(err) {
+    console.error('loadStammdaten Fehler:', err);
+    alert('Fehler beim Laden der Stammdaten. Bitte Seite neu laden.');
+  }
+}  
 function init(){
   var d=new Date();
   document.getElementById('hdr-info').textContent='Version 2.0';
   document.getElementById('footer-info').textContent='';
 
-  var sel=document.getElementById('f-erst');
+var sel=document.getElementById('f-erst');
   sel.innerHTML='<option value="">Bitte wählen...</option>';
-  D.E.forEach(function(b){sel.innerHTML+='<option value="'+esc(b)+'">'+esc(b)+'</option>'});
-
+  CACHE.users.filter(u=>u.rollen.includes('ersteller')).forEach(function(u){sel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});
   var psel=document.getElementById('f-prom');
   psel.innerHTML='<option value="">Bitte wählen...</option><option value="Keine Angabe">Keine Angabe</option>';
-  D.B.forEach(function(b){psel.innerHTML+='<option value="'+esc(b)+'">'+esc(b)+'</option>'});
-
+  CACHE.users.filter(u=>u.im_obj_dropdown).forEach(function(u){psel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});
   
 
   // Kategorien dropdown
@@ -1638,7 +1660,11 @@ document.addEventListener('change', function(e){
   markChanged();
 });
   
-  init();
+async function startup() {
+    await loadStammdaten();
+    init();
+  }
+  startup();
 </script>
 </body>
 </html>
