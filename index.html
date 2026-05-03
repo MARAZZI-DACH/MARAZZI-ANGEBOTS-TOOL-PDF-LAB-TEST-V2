@@ -404,7 +404,7 @@ function init(){
 
 var sel=document.getElementById('f-erst');
   sel.innerHTML='<option value="">Bitte wählen...</option>';
-  CACHE.users.filter(u=>u.rollen.includes('ersteller')).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(u){sel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});   if(S.currentUser && S.currentUser.rollen.includes('ersteller')){sel.value=esc(S.currentUser.signatur_de); S.erst=S.currentUser.signatur_de; S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2); updateNr();}
+  if(S.currentUser){     sel.innerHTML+='<option value="'+esc(S.currentUser.signatur_de)+'">'+esc(S.currentUser.name)+'</option>';     sel.value=esc(S.currentUser.signatur_de);     sel.disabled=true;     S.erst=S.currentUser.signatur_de;     S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2);     updateNr();   }
   fillFreigabeList();
   var psel=document.getElementById('f-prom');
   psel.innerHTML='<option value="">Bitte wählen...</option><option value="Keine Angabe">Keine Angabe</option>';
