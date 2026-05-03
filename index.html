@@ -382,9 +382,7 @@ async function loadStammdaten() {
     CACHE.gebiete = gebiete;
     // currentUser per Cloudflare-Header ermitteln
     // (lokal/dev: Fallback auf christoph.thaler für Tests)
-    const cfEmail = document.cookie.match(/CF_Authorization=/) 
-      ? null  // wird später per Header gesetzt
-      : 'christoph.thaler@marazzigroup.com'; // DEV FALLBACK
+   const cfEmail = 'christoph.thaler@marazzigroup.com'; // DEV FALLBACK
     S.currentUser = CACHE.users.find(u => u.email === cfEmail) || CACHE.users.find(u => u.email === 'christoph.thaler@marazzigroup.com');
     console.log('Stammdaten geladen. User:', S.currentUser?.name, '| Rollen:', S.currentUser?.rollen);
   } catch(err) {
