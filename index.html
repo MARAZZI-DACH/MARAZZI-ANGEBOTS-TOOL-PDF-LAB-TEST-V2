@@ -388,6 +388,15 @@ function init(){
 var sel=document.getElementById('f-erst');
   sel.innerHTML='<option value="">Bitte wählen...</option>';
   CACHE.users.filter(u=>u.rollen.includes('ersteller')).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(u){sel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});   if(S.currentUser && S.currentUser.rollen.includes('ersteller')){sel.value=esc(S.currentUser.signatur_de); S.erst=S.currentUser.signatur_de; S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2); updateNr();}
+  var fsel=document.getElementById('f-freigabe');
+  if(fsel){
+    fsel.innerHTML='<option value="">— Kein —</option>';
+    CACHE.gebiete.sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(g){
+      if(!S.currentUser || g.id !== S.currentUser.gebiet_id){
+        fsel.innerHTML+='<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>';
+      }
+    });
+  }
   var psel=document.getElementById('f-prom');
   psel.innerHTML='<option value="">Bitte wählen...</option><option value="Keine Angabe">Keine Angabe</option>';
   CACHE.users.filter(u=>u.im_obj_dropdown).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(u){psel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});
@@ -464,7 +473,11 @@ function toggleAufruf(){
   }
   updateNr();
 }
-
+function handleFreigabe(sel){
+  S.freigegebenFuer = Array.from(sel.selectedOptions)
+    .map(o => o.value)
+    .filter(v => v !== '');
+}
 function handleLnr(el){
   var v=el.value.replace(/\D/g,'').substring(0,2);
   el.value=v;
