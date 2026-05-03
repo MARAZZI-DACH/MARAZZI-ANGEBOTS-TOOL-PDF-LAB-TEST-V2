@@ -915,10 +915,10 @@ function doPDF(useOriginal){
     // NETTOPREIS-Spalte: Hauptzeilen + Alt-Zeilen jeweils mit Hintergrundfarbe
           if(data.column.index === 10){
             if(data.row.raw._isAlt){
-              data.cell.styles.fillColor = [247,228,210]; // #F7E4D2 zartes Beige
+              data.cell.styles.fillColor = [242,255,255]; // #F2FFFF zartes Hellblau
             } else {
               data.cell.styles.textColor = [204,0,0];
-              data.cell.styles.fillColor = [242,255,255]; // F2FFFF zartes Hellblau
+              data.cell.styles.fillColor = [242,255,255]; // #F2FFFF zartes Hellblau
               data.cell.styles.fontStyle = 'bold';
             }
           }
