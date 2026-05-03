@@ -497,7 +497,7 @@ function fillFreigabeList(){
   CACHE.gebiete.sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(g){
     if(S.currentUser && g.id === S.currentUser.gebiet_id) return;
     var checked = S.freigegebenFuer.includes(g.id);
-    var item = '<div onclick="handleFreigabeCheck(\''+g.id+'\',\''+g.name+'\')" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;hover:background:#f5f5f5">' +
+    var item = '<div onclick="event.stopPropagation();handleFreigabeCheck(\''+g.id+'\',\''+g.name+'\')" style="padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px">' +
       '<span style="width:16px;height:16px;border:2px solid '+(checked?'#e0a000':'#ccc')+';border-radius:3px;display:inline-flex;align-items:center;justify-content:center;background:'+(checked?'#e0a000':'#fff')+';flex-shrink:0">'+(checked?'<span style="color:white;font-size:11px">✓</span>':'')+'</span>' +
       g.name+'</div>';
     list.innerHTML += item;
