@@ -397,7 +397,7 @@ function init(){
 
 var sel=document.getElementById('f-erst');
   sel.innerHTML='<option value="">Bitte wählen...</option>';
-  CACHE.users.filter(u=>u.rollen.includes('ersteller')).forEach(function(u){sel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});
+  CACHE.users.filter(u=>u.rollen.includes('ersteller')).forEach(function(u){sel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});   if(S.currentUser && S.currentUser.rollen.includes('ersteller')){sel.value=esc(S.currentUser.signatur_de);}
   var psel=document.getElementById('f-prom');
   psel.innerHTML='<option value="">Bitte wählen...</option><option value="Keine Angabe">Keine Angabe</option>';
   CACHE.users.filter(u=>u.im_obj_dropdown).forEach(function(u){psel.innerHTML+='<option value="'+esc(u.signatur_de)+'">'+esc(u.name)+'</option>'});
