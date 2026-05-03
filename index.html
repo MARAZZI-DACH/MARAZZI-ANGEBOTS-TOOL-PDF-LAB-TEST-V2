@@ -1514,7 +1514,8 @@ var parentId = null;
       interne_notiz: S.notiz || '',
       parent_id: parentId,
       variante: varianteWert,
-      status: 'aktiv'
+      status: 'aktiv',
+      freigegeben_fuer_gebiete: S.freigegebenFuer || []
     };
     const { data, error } = await supa.from('angebote').insert([datensatz]).select();
     if(error){
