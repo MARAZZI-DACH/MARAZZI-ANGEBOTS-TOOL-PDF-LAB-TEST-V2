@@ -764,8 +764,8 @@ function doPDF(useOriginal){
     var head = [['POS.','MENGE','BRAND','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
 
     // Zebra-Farben (alternierend pro Position)
-    var colorLight = [240,248,240]; // #f0f8f0 hellgrün
-    var colorDark  = [224,238,224]; // #e0eee0 etwas dunkler grün
+    var colorLight = [245,255,242]; // #F5FFF2 zartes hHellgrün
+    var colorDark  = [245,255,242]; // #gleiche Farbe - kein Zebra mehr
 
     // Daten-Zeilen aus S.pos zusammenbauen
     var body = [];
@@ -915,7 +915,7 @@ function doPDF(useOriginal){
          // NETTOPREIS-Spalte: Rot bleibt, außer bei Alt-Positionen
           if(data.column.index === 10 && !data.row.raw._isAlt){
             data.cell.styles.textColor = [204,0,0];
-            data.cell.styles.fillColor = [220,235,245]; // hellblau
+            data.cell.styles.fillColor = [242,255,255]; // F2FFF zartes hellblau
             data.cell.styles.fontStyle = 'bold';
           }
         }
