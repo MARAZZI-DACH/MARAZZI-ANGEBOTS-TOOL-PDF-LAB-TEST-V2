@@ -912,13 +912,16 @@ function doPDF(useOriginal){
           if(data.row.raw._isAlt){
             data.cell.styles.textColor = [21,101,192]; // #1565c0
           }
-         // NETTOPREIS-Spalte: Rot bleibt, außer bei Alt-Positionen
-          if(data.column.index === 10 && !data.row.raw._isAlt){
-            data.cell.styles.textColor = [204,0,0];
-            data.cell.styles.fillColor = [242,255,255]; // F2FFF zartes hellblau
-            data.cell.styles.fontStyle = 'bold';
+    // NETTOPREIS-Spalte: Hauptzeilen + Alt-Zeilen jeweils mit Hintergrundfarbe
+          if(data.column.index === 10){
+            if(data.row.raw._isAlt){
+              data.cell.styles.fillColor = [247,228,210]; // #F7E4D2 zartes Beige
+            } else {
+              data.cell.styles.textColor = [204,0,0];
+              data.cell.styles.fillColor = [242,255,255]; // F2FFFF zartes Hellblau
+              data.cell.styles.fontStyle = 'bold';
+            }
           }
-        }
       },
      didDrawPage: function(data){
         var pageNum = doc.internal.getCurrentPageInfo().pageNumber;
