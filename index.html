@@ -387,7 +387,6 @@ async function loadStammdaten() {
     if(!cfEmail) cfEmail = 'christoph.thaler@marazzigroup.com';
     S.currentUser = CACHE.users.find(u => u.email.toLowerCase() === cfEmail.toLowerCase());
    if(!S.currentUser){
-      alert('User nicht gefunden in der Datenbank: ' + cfEmail + '\nBitte an Christoph wenden.');
       document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Zugriff verweigert</h2><p>Ihre Email <b>' + cfEmail + '</b> ist nicht in der Benutzer-Datenbank registriert.</p><p>Bitte an Christoph Thaler wenden: christoph.thaler@marazzigroup.com</p></div>';
       throw new Error('User not found');
     }
