@@ -1333,6 +1333,9 @@ async function ladeAngebotInsTool(id){
       }
       if(!promFound) fProm.selectedIndex = 0;
     }
+    S.freigegebenFuer = data.freigegeben_fuer_gebiete || [];
+    fillFreigabeList();
+    updateFreigabeDisplay();
     if(data.kategorie){
       document.getElementById('f-kat').value = data.kategorie;
       handleKat(data.kategorie);
