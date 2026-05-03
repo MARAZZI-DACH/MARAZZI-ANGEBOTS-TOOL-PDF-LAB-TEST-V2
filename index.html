@@ -1653,7 +1653,7 @@ function resetAll(){
   document.getElementById('f-lnr').value='01';
   document.getElementById('s-serie').value='';document.getElementById('s-serie').dataset.val='';
   
-  S.erst='';S.ini='';updateNr();
+  S.erst='';S.ini='';S.freigegebenFuer=[];fillFreigabeList();updateFreigabeDisplay();updateNr();
  S.gespeichert=false;S.gespeichertId=null;S.geladenVon=null;S.letzteSpeicherNr='';S.notiz='';
   var fNotiz=document.getElementById('f-notiz');if(fNotiz)fNotiz.value='';
   var varBoxR=document.getElementById('variante-box');var varInputR=document.getElementById('f-variante');
