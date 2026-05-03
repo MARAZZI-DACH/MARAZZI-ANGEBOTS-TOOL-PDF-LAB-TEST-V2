@@ -197,7 +197,7 @@ button{cursor:pointer}
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed" id="aufruf-tabelle">
         <thead>
-          <colgroup><col style="width:110px"><col style="width:85px"><col style="width:16%"><col style="width:24%"><col style="width:12%"><col style="width:65px"><col style="width:90px"><col style="width:44px"></colgroup>       <tr style="background:#f5f5f5;text-align:left;position:sticky;top:0;z-index:1">
+          <colgroup><col style="width:110px"><col style="width:85px"><col style="width:16%"><col style="width:24%"><col style="width:12%"><col style="width:65px"><col style="width:75px"><col style="width:50px"></colgroup>       <tr style="background:#f5f5f5;text-align:left;position:sticky;top:0;z-index:1">
             <th style="padding:8px 10px;border-bottom:1px solid #ddd">Angebotsnr</th>
             <th style="padding:8px 10px;border-bottom:1px solid #ddd">Datum</th>
             <th style="padding:8px 10px;border-bottom:1px solid #ddd">Kunde</th>
@@ -1224,8 +1224,8 @@ function renderAngebote(append){
     '<td style="padding:8px 10px">'+esc(a.ersteller_name || '-')+'</td>' +
     '<td style="padding:8px 10px;text-align:right">'+qmAnzeige+'</td>' +
     '<td style="padding:8px 10px;text-align:right">'+summe+'</td>' +
-    '<td style="padding:8px 6px;text-align:center"><button type="button" onclick="ladeAngebotInsTool(\''+a.id+'\')" style="'+btnStyle+';background:#E30613;color:white;padding:4px 13px">Laden</button></td>' +
-    '<td style="padding:8px 6px;text-align:center"><button type="button" onclick="setAngebotStatus(\''+a.id+'\',\'archiviert\',\''+a.status+'\')" title="'+(isArchiviert?'Aus Archiv holen':'Archivieren')+'" style="'+btnStyle+';background:'+(isArchiviert?'#2a9d4e':'#e0a000')+';color:white;width:32px;height:28px;padding:0;text-align:center">'+(isArchiviert?'↩':'📦')+'</button></td>' +
+    '<td style="padding:8px 4px;text-align:center"><button type="button" onclick="ladeAngebotInsTool(\''+a.id+'\')" style="'+btnStyle+';background:#E30613;color:white;padding:4px 13px">Laden</button></td>' +
+    '<td style="padding:8px 2px;text-align:center"><button type="button" onclick="setAngebotStatus(\''+a.id+'\',\'archiviert\',\''+a.status+'\')" title="'+(isArchiviert?'Aus Archiv holen':'Archivieren')+'" style="padding:4px 8px;border:none;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;background:'+(isArchiviert?'#2a9d4e':'#e0a000')+';color:white;width:30px;height:26px;padding:0;text-align:center;line-height:1">'+(isArchiviert?'↩':'📦')+'</button></td>' +
   '</tr>';
 }
 
