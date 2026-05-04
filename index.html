@@ -386,7 +386,7 @@ async function loadStammdaten() {
     // Fallback für lokale Entwicklung
     if(!cfEmail) cfEmail = 'christoph.thaler@marazzigroup.com';
     S.currentUser = CACHE.users.find(u => u.email.toLowerCase() === cfEmail.toLowerCase());
-   if(!S.currentUser){
+    if(!S.currentUser){
       document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Zugriff verweigert</h2><p>Ihre Email <b>' + cfEmail + '</b> ist nicht in der Benutzer-Datenbank registriert.</p><p>Bitte an Christoph Thaler wenden: christoph.thaler@marazzigroup.com</p></div>';
       throw new Error('User not found');
     }
@@ -396,14 +396,14 @@ async function loadStammdaten() {
     alert('Fehler beim Laden der Stammdaten. Bitte Seite neu laden.');
   }
 }  
-function init(){
+async function init(){
   var d=new Date();
   document.getElementById('hdr-info').textContent='Version 2.0';
   document.getElementById('footer-info').textContent='';
 
 var sel=document.getElementById('f-erst');
   sel.innerHTML='<option value="">Bitte wählen...</option>';
-  if(S.currentUser){     sel.innerHTML+='<option value="'+esc(S.currentUser.signatur_de)+'">'+esc(S.currentUser.name)+'</option>';     sel.value=esc(S.currentUser.signatur_de);     sel.disabled=true;     S.erst=S.currentUser.signatur_de;     S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2);     updateNr();   }
+  if(S.currentUser){     sel.innerHTML+='<option value="'+esc(S.currentUser.signatur_de)+'">'+esc(S.currentUser.name)+'</option>';     sel.value=esc(S.currentUser.signatur_de);     sel.disabled=true;     S.erst=S.currentUser.signatur_de;     S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2);     try{ const lfd = await getNaechsteLfd(S.ini); if(lfd !== null){ S.lnr = String(lfd).padStart(2,'0'); var lnrIn=document.getElementById('f-lnr'); if(lnrIn) lnrIn.value=S.lnr; } }catch(e){ console.warn('getNaechsteLfd init Fehler:',e); }     updateNr();   }
   fillFreigabeList();
   var psel=document.getElementById('f-prom');
   psel.innerHTML='<option value="">Bitte wählen...</option><option value="Keine Angabe">Keine Angabe</option>';
@@ -1102,7 +1102,7 @@ async function getNaechsteLfd(kuerzel){
       .select('laufende_nr')
       .eq('ersteller_kuerzel', kuerzel)
       .eq('angebots_datum', heute)
-      .eq('geloescht', false)
+      .neq('status', 'geloescht')
       .order('laufende_nr', { ascending: false })
       .limit(1);
     if(error){ console.error('Supabase Fehler:', error); return null; }
@@ -1171,7 +1171,7 @@ async function ladeAngebote(append){
           q = q.or('ersteller_email.in.("'+eigeneEmail+'","'+gvEmail+'")'
             +',freigegeben_fuer_gebiete.cs.{"'+eigenesGebiet+'"}');
         } else if(S.currentUser.rollen.includes('key-account')){
-          q = q.or('ersteller_email.eq.'+eigeneEmail
+          q = q.or('ersteller_email.in.("'+eigeneEmail+'")'
             +',freigegeben_fuer_gebiete.cs.{"'+eigenesGebiet+'"}');
         } else {
           // Nur eigene
@@ -1549,6 +1549,7 @@ var parentId = null;
       angebots_datum: angebots_datum_final,
       laufende_nr: laufende_nr_final,
       ersteller_name: S.erst || '',
+      ersteller_email: (S.geladenVon && S.geladenVon.ersteller_email) ? S.geladenVon.ersteller_email : (S.currentUser ? S.currentUser.email : ''),
       bauvorhaben: S.bv || '',
       kunde_name: kundeName,
       kunde_strasse: kundeStrasse,
@@ -1661,7 +1662,7 @@ function markUnsaved(){
   
   function showMsg(t){var el=document.getElementById('msg-box');el.textContent=t;el.style.display='block';setTimeout(function(){el.style.display='none'},8000)}
 
-function resetAll(){
+async function resetAll(){
   S.pos=[];S.bv='';S.kunde='';S.ansprech='';S.kat='';S.marke='';S.ocPdf='';S.prom='';S.lnr='01';S.showRab=false;S.showBrutto=false;S.showTransport=false;S.transportKosten='';document.getElementById('transport-row-container').innerHTML='';var tb=document.getElementById('btn-transport');if(tb){tb.className='btn-transport off';tb.textContent='+ Transportkosten Extra';}S.showPersText=false;S.persText='';var pb=document.getElementById('btn-pers-text');if(pb){pb.className='btn-transport off';pb.textContent='+ Personalisierter Text im Angebot';}renderPersText();
   document.getElementById('f-bv').value='';
   document.getElementById('f-kunde').value='';
@@ -1670,11 +1671,15 @@ function resetAll(){
   document.getElementById('f-marke').innerHTML='<option value="">Bitte zuerst Kategorie wählen...</option>';
   document.getElementById('f-marke').disabled=true;
   document.getElementById('f-prom').selectedIndex=0;
-  document.getElementById('f-erst').selectedIndex=0;
+  if(S.currentUser){
+    document.getElementById('f-erst').value=S.currentUser.signatur_de;
+  } else {
+    document.getElementById('f-erst').selectedIndex=0;
+  }
   document.getElementById('f-lnr').value='01';
   document.getElementById('s-serie').value='';document.getElementById('s-serie').dataset.val='';
   
-  S.erst='';S.ini='';S.freigegebenFuer=[];fillFreigabeList();updateFreigabeDisplay();updateNr();
+  if(S.currentUser){     S.erst=S.currentUser.signatur_de;     S.ini=S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2);     try{ const lfd = await getNaechsteLfd(S.ini); if(lfd !== null) S.lnr = String(lfd).padStart(2,'0'); var lnrIn=document.getElementById('f-lnr'); if(lnrIn) lnrIn.value=S.lnr; }catch(e){ console.warn('getNaechsteLfd resetAll Fehler:',e); }   } else {     S.erst='';S.ini='';   }   S.freigegebenFuer=[];fillFreigabeList();updateFreigabeDisplay();updateNr();
  S.gespeichert=false;S.gespeichertId=null;S.geladenVon=null;S.letzteSpeicherNr='';S.notiz='';
   var fNotiz=document.getElementById('f-notiz');if(fNotiz)fNotiz.value='';
   var varBoxR=document.getElementById('variante-box');var varInputR=document.getElementById('f-variante');
