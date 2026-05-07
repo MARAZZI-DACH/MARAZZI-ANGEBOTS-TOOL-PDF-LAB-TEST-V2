@@ -799,9 +799,13 @@ function doPDF(useOriginal){
         doc.setTextColor(valueColor[0],valueColor[1],valueColor[2]);
       }
       doc.setFont('helvetica','bold');
-      doc.text(String(value||''), valueX, y);
+      // Automatischer Wortumbruch falls Wert zu lang fuer eine Zeile ist
+      var maxValueWidth = pageW - valueX - marginL;
+      var valueLines = doc.splitTextToSize(String(value||''), maxValueWidth);
+      doc.text(valueLines, valueX, y);
       doc.setTextColor(0,0,0);
-      y+=lineH;
+      // y um die Anzahl der tatsaechlichen Zeilen erhoehen
+      y += lineH * valueLines.length;
     }
 
     addHeaderRow('Datum:', datum);
@@ -932,7 +936,7 @@ function doPDF(useOriginal){
       head: head,
       body: body,
       startY: tableY,
-      margin: {left: marginL, right: marginL},
+      margin: {left: marginL, right: marginL, top: 60},
       theme: 'grid',
       styles: {
         font: 'helvetica',
@@ -1023,7 +1027,10 @@ function doPDF(useOriginal){
       if(S.bv){
         doc.setFont('helvetica','bold');
         doc.text('Bauvorhaben:', labelX, miniY);
-        doc.text(String(S.bv), valueX, miniY);
+        // Bauvorhaben mit automatischem Wortumbruch falls zu lang
+        var maxBvWidth = pageW - valueX - marginL;
+        var bvLines = doc.splitTextToSize(String(S.bv), maxBvWidth);
+        doc.text(bvLines, valueX, miniY);
       }
     }
     // Page-Break-Helper: pruefe ob noch genug Platz fuer den naechsten Block ist
@@ -1375,7 +1382,7 @@ async function ladeAngebotInsTool(id){
       alert('Fehler beim Laden:\n\n' + (error ? error.message : 'Angebot nicht gefunden'));
       return;
     }
-    resetAll();
+    await resetAll();
     S.geladenVon = data;
     S.gespeichert = true;
     S.gespeichertId = data.id;
