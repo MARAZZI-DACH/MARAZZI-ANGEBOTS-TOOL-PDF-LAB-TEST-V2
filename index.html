@@ -1055,7 +1055,7 @@ function doPDF(useOriginal){
     // === TABELLE ===
     // ============================================================
     var tableY = textY + 6;
-    var head = [['POS','MENGE','BRAND','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
+    var head = [['POS','MENGE','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
 
     var body = [];
     var posNum = 0;
@@ -1071,11 +1071,10 @@ function doPDF(useOriginal){
       var row = [
         isAlt ? 'Alt.' : String(posNum).padStart(2, '0'),
         isAlt ? '' : String(p.menge || ''),
-        toTitleCase(String(p.brand || '')),
         toTitleCase(String(p.serie || '')),
         toTitleCase(String(p.art || '')),
         String(p.artnr || ''),
-        String(p.sz || ''),
+        String(p.sz || '').replace(/[xX]/g, '×'),
         getLagerKuerzel(String(p.werk || '')),
         String(p.fracht || ''),
         normalizeME(p.me),
@@ -1114,8 +1113,9 @@ function doPDF(useOriginal){
       var tkNum = parseFloat(tkVal);
       var tkFmt = isNaN(tkNum) ? (S.transportKosten + ' EUR') : fmt(tkNum);
       var tkRow = [
-        String(posNum).padStart(2,'0'),'1','-','TRANSPORTKOSTEN',
-        'Lieferung ohne Abladen','-','-','-','Pausch.','-', tkFmt
+        String(posNum).padStart(2,'0'),'1','TRANSPORTKOSTEN',
+        'Lieferung ohne Abladen','-','-','-','-','Pausch.', tkFmt
+      ];
       ];
       tkRow._isAlt = false;
       tkRow._posNum = posNum;
@@ -1154,50 +1154,43 @@ function doPDF(useOriginal){
         lineWidth: 0
       },
       columnStyles: {
-        0:  {halign:'center', cellWidth: 9,  fontStyle:'bold'},   // POS
-        1:  {halign:'right',  cellWidth: 13, fontStyle:'normal'}, // MENGE
-        2:  {halign:'left',   cellWidth: 14, fontStyle:'normal'}, // BRAND
-        3:  {halign:'left',   cellWidth: 12, fontStyle:'normal'}, // SERIE
-        4:  {halign:'left',   cellWidth: 36, fontStyle:'normal'}, // ARTIKEL
-        5:  {halign:'left',   cellWidth: 14, fontStyle:'bold'},   // KODE
-        6:  {halign:'center', cellWidth: 22, fontStyle:'normal'}, // FORMAT
-        7:  {halign:'left',   cellWidth: 13, fontStyle:'normal', cellPadding: {top:1.5, right:2, bottom:1.5, left:7}}, // LAGER (Kürzel + Flag)
-        8:  {halign:'center', cellWidth: 14, fontStyle:'bold'},   // FRACHT
-        9:  {halign:'center', cellWidth: 11, fontStyle:'normal'}, // ME
-        10: {halign:'right',  cellWidth: 20, fontStyle:'bold', textColor: NAVY}  // NETTOPREIS
+        0: {halign:'center', cellWidth: 9,  fontStyle:'bold'},   // POS
+        1: {halign:'right',  cellWidth: 13, fontStyle:'normal'}, // MENGE
+        2: {halign:'left',   cellWidth: 19, fontStyle:'normal'}, // SERIE (war SERIE+BRAND)
+        3: {halign:'left',   cellWidth: 43, fontStyle:'normal'}, // ARTIKEL (mehr Platz)
+        4: {halign:'left',   cellWidth: 14, fontStyle:'bold'},   // KODE
+        5: {halign:'center', cellWidth: 22, fontStyle:'normal'}, // FORMAT
+        6: {halign:'left',   cellWidth: 13, fontStyle:'normal', cellPadding: {top:1.5, right:2, bottom:1.5, left:7}}, // LAGER
+        7: {halign:'center', cellWidth: 14, fontStyle:'bold'},   // FRACHT
+        8: {halign:'center', cellWidth: 11, fontStyle:'normal'}, // ME
+        9: {halign:'right',  cellWidth: 20, fontStyle:'bold', textColor: NAVY}  // NETTOPREIS
+      },
       },
       didParseCell: function(data){
         // Header: POS, MENGE, ME, FRACHT, NETTOPREIS zentriert/rechts
         if(data.section === 'head'){
-          if(data.column.index === 0 || data.column.index === 6 ||
-             data.column.index === 8 || data.column.index === 9){
+          if(data.column.index === 0 || data.column.index === 5 ||
+             data.column.index === 7 || data.column.index === 8){
             data.cell.styles.halign = 'center';
           }
-          if(data.column.index === 1 || data.column.index === 10){
+          if(data.column.index === 1 || data.column.index === 9){
             data.cell.styles.halign = 'right';
           }
         }
         // Body
         if(data.section === 'body' && data.row.raw){
-          // Alt-Positionen: Navy-blau
-          if(data.row.raw._isAlt){
-            data.cell.styles.textColor = [21,101,192];
-          }
-          // Nettopreis-Spalte (Index 10): Inhalt leeren — wird manuell in didDrawCell gezeichnet
-          if(data.column.index === 10 && !data.row.raw._isAlt){
+          // Alt-Positionen: gleiche Farbe wie normale Zeilen (kein Color-Override)
+          // Nettopreis-Spalte (Index 9): Inhalt leeren — wird manuell in didDrawCell gezeichnet
+          if(data.column.index === 9 && !data.row.raw._isAlt){
             data.cell.styles.textColor = NAVY;
             data.cell.styles.fontStyle = 'bold';
-            // Original-Wert in raw merken, Cell-Text leeren damit autotable nicht zeichnet
             data.cell._originalText = data.cell.text;
             data.cell.text = [''];
           }
-          // FRACHT-Spalte: Cell-Hintergrund leeren — Pille zeichnen wir in didDrawCell
-          if(data.column.index === 8 && !data.row.raw._isAlt){
+          // FRACHT-Spalte (Index 7): Cell-Text wird in didDrawCell mit Pille gezeichnet
+          if(data.column.index === 7 && !data.row.raw._isAlt){
             var fr = String(data.cell.raw || '').trim();
-            if(fr === 'EXW'){
-              data.cell.styles.textColor = NAVY;
-              data.cell.styles.fontStyle = 'bold';
-            } else if(fr === 'DAP'){
+            if(fr === 'EXW' || fr === 'DAP'){
               data.cell.styles.textColor = NAVY;
               data.cell.styles.fontStyle = 'bold';
             }
@@ -1207,7 +1200,7 @@ function doPDF(useOriginal){
       didDrawCell: function(data){
         // NETTOPREIS-Spalte (Index 10): Zahl + € manuell zeichnen
         // Damit das € immer am gleichen rechten Rand steht (unabhängig von Ziffernbreite)
-        if(data.section === 'body' && data.column.index === 10 && data.row.raw && !data.row.raw._isAlt){
+        if(data.section === 'body' && data.column.index === 9 && data.row.raw && !data.row.raw._isAlt){
           var origText = data.cell._originalText;
           if(origText && origText.length > 0){
             var fullStr = origText[0]; // z.B. "14,72 €"
@@ -1242,7 +1235,7 @@ function doPDF(useOriginal){
           }
         }
         // Flagge in LAGER-Spalte (Index 7) zeichnen
-        if(data.section === 'body' && data.column.index === 7 && data.row.raw && !data.row.raw._isAlt){
+        if(data.section === 'body' && data.column.index === 6 && data.row.raw && !data.row.raw._isAlt){
           var lagerName = String(data.cell.raw || '').trim();
           var flagSrc = getFlagForLager(lagerName);
           if(flagSrc){
@@ -1263,7 +1256,7 @@ function doPDF(useOriginal){
           doc.line(marginL, ly, pageW - marginR, ly);
         }
         // FRACHT als Pille zeichnen
-        if(data.section === 'body' && data.column.index === 8 && data.row.raw && !data.row.raw._isAlt){
+        if(data.section === 'body' && data.column.index === 7 && data.row.raw && !data.row.raw._isAlt){
           var fr = String(data.cell.raw || '').trim();
           if(fr === 'EXW' || fr === 'DAP'){
             var cx = data.cell.x;
