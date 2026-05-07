@@ -1001,7 +1001,7 @@ function doPDF(useOriginal){
     // ============================================================
     // === SECTION HEADER: ANGEBOTSPOSITIONEN ===
     // ============================================================
-    var sectY = maxMetaY + 4;
+    var sectY = maxMetaY + 8;
     // Goldenes Quadrat als Akzent
     doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]);
     doc.rect(marginL, sectY - 3, 3, 3, 'F');
@@ -1039,7 +1039,7 @@ function doPDF(useOriginal){
       doc.setDrawColor(LINE_SOFT[0],LINE_SOFT[1],LINE_SOFT[2]);
       doc.setLineWidth(0.2);
       doc.line(marginL, textY, pageW - marginR, textY);
-      textY += 4;
+      textY += 6;
 
       doc.setFont('Inter','normal');
       doc.setFontSize(9);
@@ -1054,7 +1054,7 @@ function doPDF(useOriginal){
     // ============================================================
     // === TABELLE ===
     // ============================================================
-    var tableY = textY + 6;
+    var tableY = textY + 2;
     var head = [['POS','MENGE','SERIE','ARTIKEL','KODE','FORMAT','LAGER','FRACHT','ME','NETTOPREIS']];
 
     var body = [];
