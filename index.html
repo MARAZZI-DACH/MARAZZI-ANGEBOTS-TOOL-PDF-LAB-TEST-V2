@@ -1232,8 +1232,8 @@ function doPDF(useOriginal){
             }
           }
         }
-        // Flagge in LAGER-Spalte (Index 7) zeichnen
-        if(data.section === 'body' && data.column.index === 6 && data.row.raw && !data.row.raw._isAlt){
+       // Flagge in LAGER-Spalte (Index 7) zeichnen — auch bei Alt-Zeilen (konsistente Optik)
+        if(data.section === 'body' && data.column.index === 6 && data.row.raw){
           var lagerName = String(data.cell.raw || '').trim();
           var flagSrc = getFlagForLager(lagerName);
           if(flagSrc){
@@ -1253,8 +1253,8 @@ function doPDF(useOriginal){
           var ly = data.cell.y + data.cell.height;
           doc.line(marginL, ly, pageW - marginR, ly);
         }
-        // FRACHT als Pille zeichnen
-        if(data.section === 'body' && data.column.index === 7 && data.row.raw && !data.row.raw._isAlt){
+       // FRACHT als Pille zeichnen — auch bei Alt-Zeilen (konsistente Optik)
+        if(data.section === 'body' && data.column.index === 7 && data.row.raw){
           var fr = String(data.cell.raw || '').trim();
           if(fr === 'EXW' || fr === 'DAP'){
             var cx = data.cell.x;
