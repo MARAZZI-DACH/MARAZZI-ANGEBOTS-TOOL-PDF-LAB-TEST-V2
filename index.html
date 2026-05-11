@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Marazzi Angebots-Tool v2.0</title>
+<title>Marazzi Angebots-Tool v2.1</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%23cc0000' width='32' height='32' rx='6'/><text x='16' y='22' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'>M</text></svg>">
 <style>
@@ -447,7 +447,7 @@ async function loadStammdaten() {
 }  
 async function init(){
   var d=new Date();
-  document.getElementById('hdr-info').textContent='Version 2.0';
+  document.getElementById('hdr-info').textContent='Version 2.1';
   document.getElementById('footer-info').textContent='';
 
 var sel=document.getElementById('f-erst');
@@ -1176,8 +1176,12 @@ function doPDF(useOriginal){
           }
         }
         // Body
+       // Body
         if(data.section === 'body' && data.row.raw){
-          // Alt-Positionen: gleiche Farbe wie normale Zeilen (kein Color-Override)
+          // Alt-Zeilen: hellgrauer Hintergrund zur visuellen Abgrenzung
+          if(data.row.raw._isAlt){
+            data.cell.styles.fillColor = [245, 246, 248]; // sehr helles Grau, harmoniert mit Marazzi-Palette
+          }
           // Nettopreis-Spalte (Index 9): Inhalt leeren — wird manuell in didDrawCell gezeichnet
           if(data.column.index === 9 && !data.row.raw._isAlt){
             data.cell.styles.textColor = NAVY;
@@ -1253,8 +1257,8 @@ function doPDF(useOriginal){
           var ly = data.cell.y + data.cell.height;
           doc.line(marginL, ly, pageW - marginR, ly);
         }
-       // FRACHT als Pille zeichnen — auch bei Alt-Zeilen (konsistente Optik)
-        if(data.section === 'body' && data.column.index === 7 && data.row.raw){
+        // FRACHT als Pille zeichnen — auch bei Alt-Zeilen (konsistente Optik)         
+          if(data.section === 'body' && data.column.index === 7 && data.row.raw){
           var fr = String(data.cell.raw || '').trim();
           if(fr === 'EXW' || fr === 'DAP'){
             var cx = data.cell.x;
@@ -1875,18 +1879,29 @@ async function ladeAngebotInsTool(id){
     var fNotiz = document.getElementById('f-notiz');
     if(fNotiz) fNotiz.value = S.notiz;
     if(data.ersteller_name){
+      // Ersteller IMMER aus Datensatz übernehmen (Original-Ersteller bleibt im PDF sichtbar).
+      // Dropdown 'f-erst' enthält nur den eingeloggten User — wir hängen den Original-Ersteller
+      // als zusätzliche, ausgewählte Option ein, damit das Feld den richtigen Namen zeigt.
+      S.erst = data.ersteller_name;
+      S.ini = data.ersteller_kuerzel || '';
       var erstSel = document.getElementById('f-erst');
-      var erstFound = false;
-      for(var j = 0; j < erstSel.options.length; j++){
-        if(erstSel.options[j].value === data.ersteller_name){
-          erstSel.selectedIndex = j;
-          erstFound = true;
-          break;
+      if(erstSel){
+        var erstFound = false;
+        for(var j = 0; j < erstSel.options.length; j++){
+          if(erstSel.options[j].value === data.ersteller_name){
+            erstSel.selectedIndex = j;
+            erstFound = true;
+            break;
+          }
         }
-      }
-      if(erstFound){
-        S.erst = data.ersteller_name;
-        S.ini = data.ersteller_kuerzel || '';
+        if(!erstFound){
+          var opt = document.createElement('option');
+          opt.value = data.ersteller_name;
+          opt.text = data.ersteller_name;
+          opt.dataset.geladen = '1';
+          erstSel.appendChild(opt);
+          erstSel.value = data.ersteller_name;
+        }
       }
     }
     S.lnr = String(data.laufende_nr || 1).padStart(2, '0');
@@ -2014,14 +2029,21 @@ async function naechsteVariante(parentId){
     }, 0);
 var parentId = null;
     var varianteWert = null;
-    var ersteller_kuerzel_final = S.ini || 'XX';
+    // Bei Variante (geladenes Angebot): Original-Lfd-Nr + Original-Datum behalten,
+    // aber Kürzel/Name/Email IMMER vom aktuellen User (Bug-Fix 11.05.2026).
+    // S.ini/S.erst können beim Laden auf den Original-Ersteller gesetzt sein (Patch 1),
+    // daher hier explizit aus S.currentUser ableiten statt S.ini zu verwenden.
+    var ersteller_kuerzel_final = (S.currentUser && S.currentUser.email)
+      ? S.currentUser.email.split('@')[0].split('.').map(function(p){return p[0].toUpperCase();}).join('').substring(0,2)
+      : (S.ini || 'XX');
+    var ersteller_name_final = (S.currentUser && S.currentUser.signatur_de) ? S.currentUser.signatur_de : (S.erst || '');
+    var ersteller_email_final = S.currentUser ? S.currentUser.email : '';
     var angebots_datum_final = heute;
     var laufende_nr_final = lfdNum;
     if(S.geladenVon && S.geladenVon.id){
       var rootId = S.geladenVon.parent_id || S.geladenVon.id;
       varianteWert = await naechsteVariante(rootId);
       parentId = rootId;
-      ersteller_kuerzel_final = S.geladenVon.ersteller_kuerzel || ersteller_kuerzel_final;
       angebots_datum_final = S.geladenVon.angebots_datum || angebots_datum_final;
       laufende_nr_final = S.geladenVon.laufende_nr || laufende_nr_final;
     }
@@ -2029,8 +2051,8 @@ var parentId = null;
       ersteller_kuerzel: ersteller_kuerzel_final,
       angebots_datum: angebots_datum_final,
       laufende_nr: laufende_nr_final,
-      ersteller_name: S.erst || '',
-      ersteller_email: (S.geladenVon && S.geladenVon.ersteller_email) ? S.geladenVon.ersteller_email : (S.currentUser ? S.currentUser.email : ''),
+      ersteller_name: ersteller_name_final,
+      ersteller_email: ersteller_email_final,
       bauvorhaben: S.bv || '',
       kunde_name: kundeName,
       kunde_strasse: kundeStrasse,
@@ -2089,6 +2111,13 @@ var parentId = null;
       var savedNr = res.data && res.data.angebots_nr ? res.data.angebots_nr : nr;
       S.letzteSpeicherNr = savedNr;
       var savedVariante = res.data && res.data.variante ? res.data.variante : '';
+      // State auf gespeicherte Werte synchronisieren, damit PDF danach den richtigen Ersteller zeigt (Bug-Fix 11.05.2026)
+      if(res.data){
+        if(res.data.ersteller_name) S.erst = res.data.ersteller_name;
+        if(res.data.ersteller_kuerzel) S.ini = res.data.ersteller_kuerzel;
+        S.geladenVon = res.data;
+        S.istOriginalGeladen = true;
+      }
       var varBox2 = document.getElementById('variante-box');
       var varInput2 = document.getElementById('f-variante');
       if(varBox2 && varInput2 && savedVariante){
@@ -2152,6 +2181,15 @@ async function resetAll(){
   document.getElementById('f-marke').innerHTML='<option value="">Bitte zuerst Kategorie wählen...</option>';
   document.getElementById('f-marke').disabled=true;
   document.getElementById('f-prom').selectedIndex=0;
+  // Geladene Ersteller-Optionen entfernen (wurden in ladeAngebotInsTool() dynamisch hinzugefügt)
+  var erstSelReset = document.getElementById('f-erst');
+  if(erstSelReset){
+    for(var er = erstSelReset.options.length - 1; er >= 0; er--){
+      if(erstSelReset.options[er].dataset && erstSelReset.options[er].dataset.geladen === '1'){
+        erstSelReset.remove(er);
+      }
+    }
+  }
   if(S.currentUser){
     document.getElementById('f-erst').value=S.currentUser.signatur_de;
   } else {
